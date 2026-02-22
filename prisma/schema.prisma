@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          String    @default("member")
+  avatarColor   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  entries       Entry[]
+  milestones    Milestone[]
+  growthRecords GrowthRecord[]
+  invitesCreated InviteCode[] @relation("CreatedInvites")
+}
+
+model Entry {
+  id          String    @id @default(cuid())
+  title       String?
+  content     String
+  contentHtml String?
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  entryDate   DateTime
+  isDraft     Boolean   @default(false)
+
+  tags        EntryTag[]
+  media       Media[]
+
+  @@index([authorId])
+  @@index([entryDate])
+  @@index([createdAt])
+}
+
+model Tag {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  color     String?
+  icon      String?
+  createdAt DateTime   @default(now())
+  entries   EntryTag[]
+}
+
+model EntryTag {
+  entryId String
+  tagId   String
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  @@id([entryId, tagId])
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  entryId   String?
+  entry     Entry?   @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  type      String
+  filename  String
+  path      String
+  mimeType  String
+  size      Int
+  caption   String?
+  createdAt DateTime @default(now())
+  @@index([entryId])
+  @@index([type])
+}
+
+model Milestone {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime
+  category    String?
+  icon        String?
+  photoPath   String?
+  recordedBy  String
+  recorder    User      @relation(fields: [recordedBy], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@index([date])
+  @@index([category])
+}
+
+model GrowthRecord {
+  id          String    @id @default(cuid())
+  date        DateTime
+  heightCm    Float?
+  weightKg    Float?
+  headCm      Float?
+  notes       String?
+  recordedBy  String
+  recorder    User      @relation(fields: [recordedBy], references: [id])
+  createdAt   DateTime  @default(now())
+  @@index([date])
+}
+
+model InviteCode {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  createdById String
+  createdBy   User      @relation("CreatedInvites", fields: [createdById], references: [id])
+  usedAt      DateTime?
+  usedByEmail String?
+  expiresAt   DateTime?
+  maxUses     Int       @default(1)
+  useCount    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  @@index([code])
+}
+
+model WritingPrompt {
+  id       String  @id @default(cuid())
+  text     String
+  category String?
+  isActive Boolean @default(true)
+}
+
+model AppSettings {
+  id             String    @id @default("singleton")
+  childName      String    @default("Baby")
+  appTitle       String    @default("Our Journal")
+  childBirthDate DateTime?
+  theme          String    @default("warm")
+  updatedAt      DateTime  @updatedAt
+}
