@@ -1,0 +1,22 @@
+{
+  "name": "chaos-monkey",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/monkey.js",
+    "dev": "ts-node src/monkey.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "dockerode": "^4.0.0",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^20.0.0",
+    "@types/express": "^4.17.0",
+    "@types/dockerode": "^3.3.0",
+    "ts-node": "^10.9.0"
+  }
+}
