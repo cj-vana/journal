@@ -95,6 +95,12 @@ export async function PUT(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Entry not found' }, { status: 404 })
     }
 
+    // IDOR protection: only author or admin can edit
+    const userRole = (session.user as any).role
+    if (existing.authorId !== session.user.id && userRole !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const { title, content, entryDate, tagIds, mediaIds, isDraft } = parsed.data
 
     const updateData: Record<string, unknown> = {}
@@ -174,6 +180,12 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
 
     if (!entry) {
       return NextResponse.json({ error: 'Entry not found' }, { status: 404 })
+    }
+
+    // IDOR protection: only author or admin can delete
+    const userRole = (session.user as any).role
+    if (entry.authorId !== session.user.id && userRole !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Delete media files from disk

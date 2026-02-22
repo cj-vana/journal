@@ -1,3 +1,5 @@
+import { sanitizeHtml } from '@/lib/sanitize'
+
 interface EntryContentProps {
   html: string
 }
@@ -18,7 +20,7 @@ export default function EntryContent({ html }: EntryContentProps) {
         'prose-ul:text-warm-800 prose-ol:text-warm-800 ' +
         'prose-li:text-warm-800'
       }
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
     />
   )
 }
