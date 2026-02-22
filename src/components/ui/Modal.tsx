@@ -36,9 +36,12 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
       onClick={onClose}
     >
-      <div className="fixed inset-0 bg-black/50" />
+      <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
       <div
         className={cn(
           'relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6 z-10 animate-in zoom-in-95',
@@ -47,9 +50,10 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-accent text-2xl text-warm-800">{title}</h2>
+          <h2 id="modal-title" className="font-accent text-2xl text-warm-800">{title}</h2>
           <button
             onClick={onClose}
+            aria-label="Close modal"
             className="text-warm-400 hover:text-warm-600 transition-colors p-1 rounded-lg hover:bg-warm-50"
           >
             <X className="w-5 h-5" />
