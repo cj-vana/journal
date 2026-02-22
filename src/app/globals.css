@@ -1,0 +1,66 @@
+@font-face {
+  font-family: 'Caveat';
+  src: url('/fonts/Caveat-Variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dancing Script';
+  src: url('/fonts/DancingScript-Variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  [data-theme="neutral"] {
+    --accent-50: #F4F8F4;
+    --accent-100: #E0ECE0;
+    --accent-200: #C4D9C4;
+    --accent-400: #8CB88C;
+    --accent-600: #5A8A5A;
+  }
+
+  [data-theme="girl"] {
+    --accent-50: #FFF5F5;
+    --accent-100: #FFE8E8;
+    --accent-200: #FFCCD2;
+    --accent-400: #F4A0A8;
+    --accent-600: #D16B77;
+  }
+
+  [data-theme="boy"] {
+    --accent-50: #F0F7FF;
+    --accent-100: #DCEEFF;
+    --accent-200: #BAD9FF;
+    --accent-400: #7BB4E8;
+    --accent-600: #4A8BC4;
+  }
+
+  body {
+    @apply bg-cream-50 text-warm-800 font-sans antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-accent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  journal:
+    build: .
+    container_name: baby-journal
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - journal-data:/data
+    environment:
+      - DATABASE_URL=file:/data/db/journal.db
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_URL=http://localhost:3000
+      - NEXTAUTH_URL=http://localhost:3000
+      - UPLOAD_DIR=/data/uploads
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ENABLE_DEBUG_PROFILE=${ENABLE_DEBUG_PROFILE:-false}
+      - DEBUG_KEY=${DEBUG_KEY}
+    env_file:
+      - .env
+
+  chaos-monkey:
+    build: ./chaos-monkey
+    container_name: chaos-monkey
+    profiles: ["chaos"]
+    depends_on: [journal]
+    environment:
+      - TARGET_URL=http://journal:3000
+      - DEBUG_KEY=${DEBUG_KEY}
+      - CHAOS_INTERVAL_MS=30000
+      - CHAOS_PROBABILITY=0.5
+      - DOCKER_HOST=/var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - journal-data:/data:ro
+    ports:
+      - "3001:3001"
+
+volumes:
+  journal-data:
+    driver: local
