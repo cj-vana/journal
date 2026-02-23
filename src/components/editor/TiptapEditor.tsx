@@ -1,17 +1,9 @@
 'use client'
 
 import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Image from '@tiptap/extension-image'
-import Color from '@tiptap/extension-color'
-import { TextStyle } from '@tiptap/extension-text-style'
 import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
-import TextAlign from '@tiptap/extension-text-align'
-import HorizontalRule from '@tiptap/extension-horizontal-rule'
-import Blockquote from '@tiptap/extension-blockquote'
 import { useEffect, useRef } from 'react'
+import { tiptapExtensions } from '@/lib/tiptap-extensions'
 
 interface TiptapEditorProps {
   content: string
@@ -19,32 +11,6 @@ interface TiptapEditorProps {
   placeholder?: string
   editable?: boolean
 }
-
-export const tiptapExtensions = [
-  StarterKit.configure({
-    horizontalRule: false,
-    blockquote: false,
-  }),
-  Image.configure({
-    HTMLAttributes: {
-      class: 'rounded-xl max-w-full h-auto',
-    },
-  }),
-  Color,
-  TextStyle,
-  Underline,
-  Link.configure({
-    openOnClick: false,
-    HTMLAttributes: {
-      class: 'text-sky-600 underline hover:text-sky-800',
-    },
-  }),
-  TextAlign.configure({
-    types: ['heading', 'paragraph'],
-  }),
-  HorizontalRule,
-  Blockquote,
-]
 
 export default function TiptapEditor({
   content,
@@ -102,4 +68,4 @@ export default function TiptapEditor({
   )
 }
 
-export { TiptapEditor }
+export { TiptapEditor, tiptapExtensions }

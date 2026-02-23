@@ -22,7 +22,7 @@ import {
   Mic,
   Palette,
 } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 interface EditorToolbarProps {
   editor: Editor | null
@@ -46,23 +46,27 @@ function ToolbarButton({
   isActive = false,
   children,
   title,
+  ...rest
 }: {
   onClick: () => void
   isActive?: boolean
   children: React.ReactNode
   title: string
-}) {
+} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'title' | 'children'>) {
   return (
     <button
       type="button"
       onClick={onClick}
       title={title}
+      aria-label={title}
+      aria-pressed={isActive}
       className={cn(
         'p-1.5 rounded-lg transition-colors',
         isActive
           ? 'bg-warm-200 text-warm-800'
           : 'text-warm-600 hover:bg-warm-100 hover:text-warm-800'
       )}
+      {...rest}
     >
       {children}
     </button>
@@ -87,6 +91,19 @@ export default function EditorToolbar({ editor, onImageUpload, onAudioUpload }: 
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const handleColorKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setShowColors(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (showColors) {
+      document.addEventListener('keydown', handleColorKeyDown)
+    }
+    return () => document.removeEventListener('keydown', handleColorKeyDown)
+  }, [showColors, handleColorKeyDown])
+
   if (!editor) return null
 
   const addLink = () => {
@@ -103,7 +120,7 @@ export default function EditorToolbar({ editor, onImageUpload, onAudioUpload }: 
   const iconSize = 18
 
   return (
-    <div className="bg-warm-50 border border-warm-200 rounded-t-2xl px-3 py-2 flex flex-wrap items-center gap-0.5">
+    <div role="toolbar" aria-label="Text formatting" className="bg-warm-50 border border-warm-200 rounded-t-2xl px-3 py-2 flex flex-wrap items-center gap-0.5">
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
         isActive={editor.isActive('bold')}
@@ -214,7 +231,7 @@ export default function EditorToolbar({ editor, onImageUpload, onAudioUpload }: 
       <Divider />
 
       <div className="relative" ref={colorRef}>
-        <ToolbarButton onClick={() => setShowColors(!showColors)} title="Text color">
+        <ToolbarButton onClick={() => setShowColors(!showColors)} title="Text color" aria-haspopup="true">
           <Palette size={iconSize} />
         </ToolbarButton>
         {showColors && (
@@ -224,6 +241,7 @@ export default function EditorToolbar({ editor, onImageUpload, onAudioUpload }: 
                 key={color.name}
                 type="button"
                 title={color.name}
+                aria-label={color.name}
                 onClick={() => {
                   if (color.value === '') {
                     editor.chain().focus().unsetColor().run()

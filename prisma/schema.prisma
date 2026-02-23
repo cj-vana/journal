@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
@@ -41,6 +42,8 @@ model Entry {
   @@index([authorId])
   @@index([entryDate])
   @@index([createdAt])
+  @@index([isDraft, entryDate])
+  @@index([isDraft, authorId, entryDate])
 }
 
 model Tag {
@@ -89,6 +92,7 @@ model Milestone {
   updatedAt   DateTime  @updatedAt
   @@index([date])
   @@index([category])
+  @@index([recordedBy])
 }
 
 model GrowthRecord {
@@ -102,6 +106,7 @@ model GrowthRecord {
   recorder    User      @relation(fields: [recordedBy], references: [id])
   createdAt   DateTime  @default(now())
   @@index([date])
+  @@index([recordedBy])
 }
 
 model InviteCode {
@@ -115,7 +120,6 @@ model InviteCode {
   maxUses     Int       @default(1)
   useCount    Int       @default(0)
   createdAt   DateTime  @default(now())
-  @@index([code])
 }
 
 model WritingPrompt {
@@ -123,6 +127,7 @@ model WritingPrompt {
   text     String
   category String?
   isActive Boolean @default(true)
+  @@index([isActive])
 }
 
 model AppSettings {

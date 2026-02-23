@@ -40,6 +40,7 @@ export default function Header({ title, onMenuToggle }: HeaderProps) {
           {/* Mobile menu button */}
           <button
             onClick={onMenuToggle}
+            aria-label="Open navigation menu"
             className="md:hidden p-2 text-warm-600 hover:bg-warm-50 rounded-xl transition-colors"
           >
             <Menu className="w-5 h-5" />

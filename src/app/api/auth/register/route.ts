@@ -42,18 +42,20 @@ export async function POST(req: NextRequest) {
   const colors = ['#F4A0A8', '#7BB4E8', '#B08CE0', '#8CB88C', '#D9C4A0']
   const avatarColor = colors[Math.floor(Math.random() * colors.length)]
 
-  await prisma.user.create({
-    data: { name, email, passwordHash, avatarColor },
-  })
+  await prisma.$transaction(async (tx) => {
+    await tx.user.create({
+      data: { name, email, passwordHash, avatarColor },
+    })
 
-  // Update invite code usage
-  await prisma.inviteCode.update({
-    where: { id: invite.id },
-    data: {
-      useCount: { increment: 1 },
-      usedAt: new Date(),
-      usedByEmail: email,
-    },
+    // Update invite code usage
+    await tx.inviteCode.update({
+      where: { id: invite.id },
+      data: {
+        useCount: { increment: 1 },
+        usedAt: new Date(),
+        usedByEmail: email,
+      },
+    })
   })
 
   return NextResponse.json({ success: true }, { status: 201 })

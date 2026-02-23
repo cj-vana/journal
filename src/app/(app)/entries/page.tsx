@@ -83,9 +83,9 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
 
       {entries.length === 0 ? (
         <div className="text-center py-16">
-          <BookOpen size={48} className="mx-auto text-warm-400 mb-4" />
+          <BookOpen size={48} className="mx-auto text-warm-600 mb-4" />
           <h2 className="text-xl font-accent text-warm-600 mb-2">No entries yet</h2>
-          <p className="text-warm-400 mb-6">Start capturing your precious memories.</p>
+          <p className="text-warm-600 mb-6">Start capturing your precious memories.</p>
           <Link
             href="/entries/new"
             className="inline-flex items-center gap-2 px-4 py-2 bg-rose-400 text-white rounded-xl hover:bg-rose-600 transition-colors font-medium text-sm"

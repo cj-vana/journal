@@ -17,7 +17,7 @@ export default function MobileNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-warm-200 pb-[env(safe-area-inset-bottom)]">
+    <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-warm-200 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
           const isActive = item.href === '/entries/new'
@@ -30,6 +30,7 @@ export default function MobileNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-label="New entry"
                 className="-mt-4 w-14 h-14 rounded-full bg-rose-400 text-white shadow-lg flex items-center justify-center hover:bg-rose-600 transition-colors"
               >
                 <Icon className="w-6 h-6" />
@@ -41,9 +42,10 @@ export default function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex flex-col items-center gap-1 px-3 py-1',
-                isActive ? 'text-rose-400' : 'text-warm-400'
+                isActive ? 'text-rose-400' : 'text-warm-600'
               )}
             >
               <Icon className="w-5 h-5" />

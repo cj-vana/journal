@@ -25,7 +25,7 @@ interface Props {
   unit: string
 }
 
-export function GrowthChart({ data, dataKey, label, color, unit }: Props) {
+export default function GrowthChart({ data, dataKey, label, color, unit }: Props) {
   const chartData = data.map((d) => ({
     date: d.date,
     [dataKey]: d.value,
@@ -35,7 +35,7 @@ export function GrowthChart({ data, dataKey, label, color, unit }: Props) {
   return (
     <div className="bg-white rounded-2xl border border-warm-200 shadow-sm p-6">
       <h3 className="font-accent text-lg text-warm-800 mb-4">{label}</h3>
-      <div className="h-64">
+      <div className="h-64" role="img" aria-label={`${label} chart showing ${data.length} data points in ${unit}`}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#F5ECDB" />

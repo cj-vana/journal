@@ -36,7 +36,7 @@ export function MilestoneTimeline({ milestones, userId, userRole, onEdit, onDele
   return (
     <div className="relative">
       {/* Vertical timeline line */}
-      <div className="absolute left-4 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-0.5 bg-warm-200" />
+      <div className="absolute left-4 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-0.5 bg-warm-200" aria-hidden="true" />
 
       <div className="space-y-8">
         {milestones.map((milestone, index) => {

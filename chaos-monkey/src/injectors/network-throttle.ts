@@ -2,7 +2,7 @@ import { Injector, ApiClient, ExperimentResult } from '../types';
 
 const networkThrottle: Injector = {
   name: 'network-throttle',
-  description: 'Measure latency across 10 sequential requests to detect performance issues',
+  description: 'Measure response latency and verify it stays under threshold',
   async run(client: ApiClient): Promise<ExperimentResult> {
     const start = Date.now();
     const latencies: number[] = [];
@@ -11,8 +11,6 @@ const networkThrottle: Injector = {
     try {
       for (let i = 0; i < 10; i++) {
         const reqStart = Date.now();
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), TIMEOUT);
 
         try {
           await client.get('/api/debug/status');
@@ -20,8 +18,6 @@ const networkThrottle: Injector = {
           latencies.push(elapsed);
         } catch {
           latencies.push(TIMEOUT);
-        } finally {
-          clearTimeout(timer);
         }
       }
 

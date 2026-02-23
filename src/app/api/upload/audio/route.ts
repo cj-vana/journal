@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { apiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { ALLOWED_AUDIO_TYPES, MAX_UPLOAD_SIZE } from '@/lib/constants'
 import path from 'path'
@@ -17,9 +17,14 @@ const MIME_TO_EXT: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
+    const session = await apiAuth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const contentLength = parseInt(req.headers.get('content-length') || '0')
+    if (contentLength > MAX_UPLOAD_SIZE + 1024) {
+      return NextResponse.json({ error: 'File too large' }, { status: 413 })
     }
 
     const formData = await req.formData()

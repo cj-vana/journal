@@ -29,15 +29,12 @@ const processKiller: Injector = {
 
       // Get entry count before restart
       const before = await client.get('/api/entries');
-      const beforeCount = Array.isArray(before.data) ? before.data.length : 0;
+      const beforeCount = before.data?.total ?? before.data?.entries?.length ?? 0;
 
       // Find and restart the baby-journal container
       const containers = await docker.listContainers({ all: true });
-      const target = containers.find(
-        (c) =>
-          c.Names.some((n) => n.includes('baby-journal')) ||
-          c.Names.some((n) => n.includes('journal')) ||
-          (c.Image && c.Image.includes('journal'))
+      const target = containers.find((c) =>
+        c.Names?.some((n) => n === '/baby-journal' || n === 'baby-journal')
       );
 
       if (!target) {
@@ -80,7 +77,7 @@ const processKiller: Injector = {
 
       // Verify data persisted
       const after = await client.get('/api/entries');
-      const afterCount = Array.isArray(after.data) ? after.data.length : 0;
+      const afterCount = after.data?.total ?? after.data?.entries?.length ?? 0;
 
       const passed = afterCount === beforeCount;
       return {

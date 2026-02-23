@@ -62,7 +62,7 @@ export function MilestoneCard({ milestone, color, canModify, onEdit, onDelete }:
                 {CATEGORY_LABELS[milestone.category] || milestone.category}
               </span>
             )}
-            <span className="text-xs text-warm-400">
+            <span className="text-xs text-warm-600">
               by {milestone.recorder.name}
             </span>
           </div>
@@ -70,10 +70,11 @@ export function MilestoneCard({ milestone, color, canModify, onEdit, onDelete }:
 
         {/* Action buttons */}
         {canModify && (
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity flex-shrink-0">
             <button
               onClick={onEdit}
-              className="p-1.5 rounded-lg hover:bg-warm-100 text-warm-400 hover:text-warm-600 transition-colors"
+              aria-label="Edit milestone"
+              className="p-1.5 rounded-lg hover:bg-warm-100 text-warm-600 hover:text-warm-600 transition-colors focus:opacity-100"
               title="Edit"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +83,8 @@ export function MilestoneCard({ milestone, color, canModify, onEdit, onDelete }:
             </button>
             <button
               onClick={onDelete}
-              className="p-1.5 rounded-lg hover:bg-rose-50 text-warm-400 hover:text-rose-600 transition-colors"
+              aria-label="Delete milestone"
+              className="p-1.5 rounded-lg hover:bg-rose-50 text-warm-600 hover:text-rose-600 transition-colors focus:opacity-100"
               title="Delete"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

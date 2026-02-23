@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { apiAuth } from '@/lib/api-auth'
 import path from 'path'
 import fs from 'fs/promises'
 
@@ -22,12 +22,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
-  // Check auth (allow debug key bypass)
-  const session = await auth()
-  const debugKey = req.headers.get('x-debug-key')
-  const isDebug = process.env.ENABLE_DEBUG_PROFILE === 'true' && debugKey === process.env.DEBUG_KEY
-
-  if (!session?.user && !isDebug) {
+  const session = await apiAuth()
+  if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

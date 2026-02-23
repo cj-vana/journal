@@ -9,8 +9,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const user = {
     name: session.user?.name || 'User',
-    role: (session.user as any)?.role || 'member',
-    avatarColor: (session.user as any)?.avatarColor || null,
+    role: session.user?.role || 'member',
+    avatarColor: session.user?.avatarColor || null,
   }
 
   return (

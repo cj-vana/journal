@@ -32,7 +32,7 @@ export default async function GrowthPage() {
       <GrowthPageClient
         initialRecords={serialized}
         userId={session.user!.id!}
-        userRole={(session.user as any).role}
+        userRole={session.user.role}
       />
     </div>
   )

@@ -13,6 +13,7 @@ export default async function DashboardPage() {
 
   const [totalEntries, monthlyEntries, recentEntries, latestMilestone, prompts] =
     await Promise.all([
+      // Intentionally counting all entries (no filter) for the global stats display
       prisma.entry.count(),
       prisma.entry.count({
         where: { createdAt: { gte: startOfMonth(new Date()) } },
@@ -20,7 +21,16 @@ export default async function DashboardPage() {
       prisma.entry.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
-        include: { author: { select: { name: true, avatarColor: true } } },
+        select: {
+          id: true,
+          title: true,
+          entryDate: true,
+          isDraft: true,
+          content: true,
+          author: { select: { id: true, name: true, avatarColor: true } },
+          tags: { include: { tag: true } },
+          media: { where: { type: 'image' }, take: 1, select: { path: true, type: true } },
+        },
       }),
       prisma.milestone.findFirst({ orderBy: { date: 'desc' } }),
       prisma.writingPrompt.findMany({ where: { isActive: true }, take: 10 }),

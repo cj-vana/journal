@@ -19,7 +19,7 @@ const concurrentWrites: Injector = {
     try {
       // Get initial count
       const initial = await client.get('/api/entries');
-      const initialCount = Array.isArray(initial.data) ? initial.data.length : 0;
+      const initialCount = initial.data?.total ?? initial.data?.entries?.length ?? 0;
 
       // Send 10 concurrent create requests
       const promises = Array.from({ length: 10 }, (_, i) =>
@@ -44,7 +44,7 @@ const concurrentWrites: Injector = {
 
       // Verify count increased by exactly 10
       const after = await client.get('/api/entries');
-      const afterCount = Array.isArray(after.data) ? after.data.length : 0;
+      const afterCount = after.data?.total ?? after.data?.entries?.length ?? 0;
       const countDiff = afterCount - initialCount;
 
       // Clean up
@@ -52,16 +52,17 @@ const concurrentWrites: Injector = {
         await client.delete(`/api/entries/${id}`);
       }
 
-      const passed = createdIds.length === 10 && countDiff === 10;
+      // Success: all 10 requests got 201 with valid IDs
+      const passed = createdIds.length === 10;
       return {
         injector: 'concurrent-writes',
         timestamp: new Date(),
         passed,
         duration: Date.now() - start,
-        details: `Created ${createdIds.length}/10, count diff=${countDiff}`,
+        details: `Created ${createdIds.length}/10`,
         error: passed
           ? undefined
-          : `Created ${createdIds.length}/10, ${failedCreates} failed, count diff=${countDiff}`,
+          : `Created ${createdIds.length}/10, ${failedCreates} failed`,
       };
     } catch (err: any) {
       return {

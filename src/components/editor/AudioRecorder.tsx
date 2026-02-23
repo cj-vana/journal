@@ -91,7 +91,7 @@ export default function AudioRecorder({ onUploadComplete, onCancel }: AudioRecor
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
               </span>
-              <span className="text-warm-800 font-medium">{formatDuration(duration)}</span>
+              <span className="text-warm-800 font-medium" aria-live="polite">{formatDuration(duration)}</span>
             </div>
             <button
               type="button"
@@ -109,6 +109,7 @@ export default function AudioRecorder({ onUploadComplete, onCancel }: AudioRecor
             <button
               type="button"
               onClick={togglePlayback}
+              aria-label={isPlaying ? 'Pause playback' : 'Play recording'}
               className="p-2 bg-white border border-warm-200 rounded-xl hover:bg-warm-100 transition-colors"
             >
               {isPlaying ? (

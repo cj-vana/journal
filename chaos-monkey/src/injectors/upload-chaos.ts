@@ -13,11 +13,14 @@ const uploadChaos: Injector = {
     const start = Date.now();
     const errors: string[] = [];
 
+    let uploadedMediaId: string | null = null;
     try {
       // 1. Upload a valid 1x1 PNG - should succeed
       const validRes = await client.upload('/api/upload/image', VALID_PNG, 'test.png', 'image/png');
       if (validRes.status !== 200 && validRes.status !== 201) {
         errors.push(`Valid PNG upload returned ${validRes.status}, expected 200/201`);
+      } else if (validRes.data?.id) {
+        uploadedMediaId = validRes.data.id;
       }
 
       // 2. Upload random bytes claiming to be an image - should be rejected
@@ -51,6 +54,10 @@ const uploadChaos: Injector = {
         duration: Date.now() - start,
         error: err.message,
       };
+    } finally {
+      if (uploadedMediaId) {
+        await client.delete(`/api/upload/${uploadedMediaId}`).catch(() => {});
+      }
     }
   },
 };

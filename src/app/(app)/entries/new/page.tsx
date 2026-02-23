@@ -2,26 +2,22 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useDebounce } from '@/hooks/useDebounce'
-import EditorToolbar from '@/components/editor/EditorToolbar'
 import ImageUpload from '@/components/editor/ImageUpload'
 import AudioRecorder from '@/components/editor/AudioRecorder'
 import AudioPlayer from '@/components/editor/AudioPlayer'
 import TagSelector from '@/components/entries/TagSelector'
-import { useEditor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Image from '@tiptap/extension-image'
-import Color from '@tiptap/extension-color'
-import { TextStyle } from '@tiptap/extension-text-style'
+import { useEditor, EditorContent } from '@tiptap/react'
 import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
-import TextAlign from '@tiptap/extension-text-align'
-import HorizontalRule from '@tiptap/extension-horizontal-rule'
-import Blockquote from '@tiptap/extension-blockquote'
-import { EditorContent } from '@tiptap/react'
+import { tiptapExtensions } from '@/lib/tiptap-extensions'
 import { format } from 'date-fns'
 import { Save, FileText, ArrowLeft, Loader2 } from 'lucide-react'
+
+const EditorToolbar = dynamic(() => import('@/components/editor/EditorToolbar'), {
+  ssr: false,
+  loading: () => <div className="h-10 bg-warm-50 rounded-t-2xl border border-warm-200 animate-pulse" />,
+})
 
 interface AudioAttachment {
   id: string
@@ -39,26 +35,14 @@ export default function NewEntryPage() {
   const [showAudioRecorder, setShowAudioRecorder] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSavedDraft, setLastSavedDraft] = useState('')
+  const [draftId, setDraftId] = useState<string | null>(null)
 
   const debouncedContent = useDebounce(content, 3000)
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ horizontalRule: false, blockquote: false }),
-      Image.configure({
-        HTMLAttributes: { class: 'rounded-xl max-w-full h-auto' },
-      }),
-      Color,
-      TextStyle,
+      ...tiptapExtensions,
       Placeholder.configure({ placeholder: 'Write something...' }),
-      Underline,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: 'text-sky-600 underline hover:text-sky-800' },
-      }),
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      HorizontalRule,
-      Blockquote,
     ],
     editorProps: {
       attributes: {
@@ -83,18 +67,34 @@ export default function NewEntryPage() {
 
     const autoSave = async () => {
       try {
-        await fetch('/api/entries', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: title || undefined,
-            content: debouncedContent,
-            entryDate,
-            tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-            mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
-            isDraft: true,
-          }),
-        })
+        const draftPayload = {
+          title: title || undefined,
+          content: debouncedContent,
+          entryDate,
+          tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+          mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
+          isDraft: true,
+        }
+
+        if (draftId) {
+          // Update existing draft
+          await fetch(`/api/entries/${draftId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(draftPayload),
+          })
+        } else {
+          // Create new draft
+          const res = await fetch('/api/entries', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(draftPayload),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            setDraftId(data.id)
+          }
+        }
         setLastSavedDraft(debouncedContent)
       } catch {
         // Silent fail for auto-save
@@ -109,17 +109,22 @@ export default function NewEntryPage() {
       if (!content) return
       setIsSaving(true)
       try {
-        const res = await fetch('/api/entries', {
-          method: 'POST',
+        const payload = {
+          title: title || undefined,
+          content,
+          entryDate,
+          tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+          mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
+          isDraft,
+        }
+
+        const url = draftId ? `/api/entries/${draftId}` : '/api/entries'
+        const method = draftId ? 'PUT' : 'POST'
+
+        const res = await fetch(url, {
+          method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: title || undefined,
-            content,
-            entryDate,
-            tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-            mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
-            isDraft,
-          }),
+          body: JSON.stringify(payload),
         })
 
         if (!res.ok) {
@@ -135,7 +140,7 @@ export default function NewEntryPage() {
         setIsSaving(false)
       }
     },
-    [content, title, entryDate, selectedTagIds, mediaIds, router]
+    [content, title, entryDate, selectedTagIds, mediaIds, draftId, router]
   )
 
   const handleImageUpload = useCallback(() => {
@@ -178,7 +183,7 @@ export default function NewEntryPage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Entry title (optional)"
-          className="w-full px-4 py-3 bg-white border border-warm-200 rounded-2xl text-warm-800 text-lg font-accent placeholder:text-warm-400 focus:outline-none focus:ring-2 focus:ring-warm-200"
+          className="w-full px-4 py-3 bg-white border border-warm-200 rounded-2xl text-warm-800 text-lg font-accent placeholder:text-warm-500 focus:outline-none focus:ring-2 focus:ring-warm-200"
         />
 
         <div className="flex gap-4">

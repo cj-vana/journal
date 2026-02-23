@@ -15,13 +15,13 @@ const dbStress: Injector = {
   description: 'Create 50 entries rapidly then delete them all, verifying count consistency',
   async run(client: ApiClient): Promise<ExperimentResult> {
     const start = Date.now();
+    const createdIds: string[] = [];
     try {
       // Get initial entry count
       const initial = await client.get('/api/entries');
-      const initialCount = Array.isArray(initial.data) ? initial.data.length : 0;
+      const initialCount = initial.data?.total ?? initial.data?.entries?.length ?? 0;
 
       // Create 50 entries
-      const createdIds: string[] = [];
       for (let i = 0; i < 50; i++) {
         const res = await client.post('/api/entries', {
           title: `Chaos Test ${i}`,
@@ -49,8 +49,8 @@ const dbStress: Injector = {
       }
 
       // Verify final count matches initial
-      const final = await client.get('/api/entries');
-      const finalCount = Array.isArray(final.data) ? final.data.length : 0;
+      const final_ = await client.get('/api/entries');
+      const finalCount = final_.data?.total ?? final_.data?.entries?.length ?? 0;
 
       const passed = finalCount === initialCount;
       return {
@@ -69,6 +69,10 @@ const dbStress: Injector = {
         duration: Date.now() - start,
         error: err.message,
       };
+    } finally {
+      for (const id of createdIds) {
+        await client.delete(`/api/entries/${id}`).catch(() => {});
+      }
     }
   },
 };

@@ -71,6 +71,7 @@ export default function AudioPlayer({ src, caption }: AudioPlayerProps) {
       <button
         type="button"
         onClick={togglePlay}
+        aria-label={isPlaying ? 'Pause' : 'Play'}
         className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-warm-200 rounded-full hover:bg-warm-400 transition-colors"
       >
         {isPlaying ? (
@@ -91,9 +92,13 @@ export default function AudioPlayer({ src, caption }: AudioPlayerProps) {
             max="100"
             value={progress}
             onChange={handleSeek}
+            aria-label="Audio progress"
+            aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
             className="flex-1 h-1.5 bg-warm-200 rounded-full appearance-none cursor-pointer
-              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
-              [&::-webkit-slider-thumb]:bg-warm-600 [&::-webkit-slider-thumb]:rounded-full"
+              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+              [&::-webkit-slider-thumb]:bg-warm-600 [&::-webkit-slider-thumb]:rounded-full
+              [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5
+              [&::-moz-range-thumb]:bg-warm-600 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
           />
           <span className="text-xs text-warm-600 tabular-nums flex-shrink-0">
             {formatTime(currentTime)} / {formatTime(duration)}

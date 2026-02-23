@@ -13,6 +13,7 @@ const diskFiller: Injector = {
     const start = Date.now();
     let successCount = 0;
     let failCount = 0;
+    const createdMediaIds: string[] = [];
 
     try {
       // Check debug status before
@@ -23,6 +24,9 @@ const diskFiller: Injector = {
         const res = await client.upload('/api/upload/image', VALID_PNG, `chaos-disk-${i}.png`, 'image/png');
         if (res.status === 200 || res.status === 201) {
           successCount++;
+          if (res.data?.id) {
+            createdMediaIds.push(res.data.id);
+          }
         } else {
           failCount++;
         }
@@ -48,6 +52,10 @@ const diskFiller: Injector = {
         duration: Date.now() - start,
         error: err.message,
       };
+    } finally {
+      for (const id of createdMediaIds) {
+        await client.delete(`/api/upload/${id}`).catch(() => {});
+      }
     }
   },
 };

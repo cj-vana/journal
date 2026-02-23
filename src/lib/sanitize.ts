@@ -1,19 +1,9 @@
-/**
- * Basic HTML sanitizer for Tiptap-generated content.
- * Strips script tags, event handlers, and dangerous attributes.
- * Tiptap's generateHTML already produces safe output from its schema,
- * but this provides defense-in-depth.
- */
+import DOMPurify from 'isomorphic-dompurify'
+
 export function sanitizeHtml(html: string): string {
-  return html
-    // Remove script tags and their content
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    // Remove event handler attributes
-    .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    // Remove javascript: URLs
-    .replace(/href\s*=\s*["']?\s*javascript:/gi, 'href="')
-    // Remove data: URLs in src attributes (except images we embed for PDF)
-    .replace(/src\s*=\s*["']?\s*data:(?!image\/)/gi, 'src="')
-    // Remove iframe, embed, object tags
-    .replace(/<\/?(?:iframe|embed|object|applet|form)\b[^>]*>/gi, '')
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p','br','strong','em','u','s','del','h1','h2','h3','h4','h5','h6','ul','ol','li','blockquote','pre','code','a','img','hr','span','div','sub','sup'],
+    ALLOWED_ATTR: ['href','src','alt','title','class','style','target','rel','width','height','loading','data-type','data-text-align'],
+    ALLOW_DATA_ATTR: false,
+  })
 }

@@ -180,7 +180,7 @@ export default function UserManagement({ currentUserId }: { currentUserId: strin
                   <td className="px-5 py-3 font-medium text-warm-800">
                     {user.name}
                     {user.id === currentUserId && (
-                      <span className="ml-2 text-xs text-warm-400">(you)</span>
+                      <span className="ml-2 text-xs text-warm-600">(you)</span>
                     )}
                   </td>
                   <td className="px-5 py-3 text-warm-600">{user.email}</td>

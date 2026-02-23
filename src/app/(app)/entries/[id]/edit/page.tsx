@@ -2,24 +2,21 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import EditorToolbar from '@/components/editor/EditorToolbar'
+import dynamic from 'next/dynamic'
 import ImageUpload from '@/components/editor/ImageUpload'
 import AudioRecorder from '@/components/editor/AudioRecorder'
 import AudioPlayer from '@/components/editor/AudioPlayer'
 import TagSelector from '@/components/entries/TagSelector'
 import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Image from '@tiptap/extension-image'
-import Color from '@tiptap/extension-color'
-import { TextStyle } from '@tiptap/extension-text-style'
 import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
-import TextAlign from '@tiptap/extension-text-align'
-import HorizontalRule from '@tiptap/extension-horizontal-rule'
-import Blockquote from '@tiptap/extension-blockquote'
+import { tiptapExtensions } from '@/lib/tiptap-extensions'
 import { format } from 'date-fns'
 import { Save, ArrowLeft, Loader2 } from 'lucide-react'
+
+const EditorToolbar = dynamic(() => import('@/components/editor/EditorToolbar'), {
+  ssr: false,
+  loading: () => <div className="h-10 bg-warm-50 rounded-t-2xl border border-warm-200 animate-pulse" />,
+})
 
 interface AudioAttachment {
   id: string
@@ -43,21 +40,8 @@ export default function EditEntryPage() {
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ horizontalRule: false, blockquote: false }),
-      Image.configure({
-        HTMLAttributes: { class: 'rounded-xl max-w-full h-auto' },
-      }),
-      Color,
-      TextStyle,
+      ...tiptapExtensions,
       Placeholder.configure({ placeholder: 'Write something...' }),
-      Underline,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: 'text-sky-600 underline hover:text-sky-800' },
-      }),
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      HorizontalRule,
-      Blockquote,
     ],
     editorProps: {
       attributes: {
@@ -167,7 +151,7 @@ export default function EditEntryPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 size={32} className="animate-spin text-warm-400" />
+        <Loader2 size={32} className="animate-spin text-warm-600" />
       </div>
     )
   }
@@ -191,7 +175,7 @@ export default function EditEntryPage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Entry title (optional)"
-          className="w-full px-4 py-3 bg-white border border-warm-200 rounded-2xl text-warm-800 text-lg font-accent placeholder:text-warm-400 focus:outline-none focus:ring-2 focus:ring-warm-200"
+          className="w-full px-4 py-3 bg-white border border-warm-200 rounded-2xl text-warm-800 text-lg font-accent placeholder:text-warm-500 focus:outline-none focus:ring-2 focus:ring-warm-200"
         />
 
         <div className="flex gap-4">

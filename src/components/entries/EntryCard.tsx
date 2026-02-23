@@ -45,7 +45,8 @@ export default function EntryCard({ entry }: EntryCardProps) {
           <div className="mb-3 -mx-4 -mt-4 overflow-hidden rounded-t-2xl">
             <img
               src={thumbnail}
-              alt=""
+              alt={entry.title || 'Entry image'}
+              loading="lazy"
               className="w-full h-40 object-cover"
             />
           </div>
@@ -65,7 +66,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
             {entry.author.name.charAt(0).toUpperCase()}
           </div>
           <span className="text-warm-600 text-xs">{entry.author.name}</span>
-          <span className="text-warm-400 text-xs">
+          <span className="text-warm-600 text-xs">
             {format(new Date(entry.entryDate), 'MMM d, yyyy')}
           </span>
         </div>

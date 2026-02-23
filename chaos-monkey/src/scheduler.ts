@@ -6,6 +6,9 @@ export class Scheduler {
   private interval: ReturnType<typeof setInterval> | null = null;
   private _isRunning = false;
   private _isPaused = false;
+  private running = false;
+  private consecutiveFailures = 0;
+  private circuitBreakerCooldown = false;
   private intervalMs: number;
   private probability: number;
 
@@ -31,39 +34,67 @@ export class Scheduler {
 
     this.interval = setInterval(async () => {
       if (this._isPaused) return;
+      if (this.running) return;
+      if (this.circuitBreakerCooldown) return;
 
-      const roll = Math.random();
-      if (roll >= this.probability) {
-        console.log(chalk.gray(`Skipped tick (roll=${roll.toFixed(2)} >= probability=${this.probability})`));
-        return;
-      }
-
-      const injector = injectors[Math.floor(Math.random() * injectors.length)];
-      console.log(chalk.cyan(`Running injector: ${injector.name}`));
-
+      this.running = true;
       try {
-        const result = await injector.run(client);
-        reporter.addResult(result);
-
-        if (result.passed) {
-          console.log(
-            chalk.green(`  PASS [${injector.name}] ${result.duration}ms${result.details ? ' - ' + result.details : ''}`)
-          );
-        } else {
-          console.log(
-            chalk.red(`  FAIL [${injector.name}] ${result.duration}ms - ${result.error || 'unknown error'}`)
-          );
+        const roll = Math.random();
+        if (roll >= this.probability) {
+          console.log(chalk.gray(`Skipped tick (roll=${roll.toFixed(2)} >= probability=${this.probability})`));
+          return;
         }
-      } catch (err: any) {
-        const result = {
-          injector: injector.name,
-          timestamp: new Date(),
-          passed: false,
-          duration: 0,
-          error: `Unhandled: ${err.message}`,
-        };
-        reporter.addResult(result);
-        console.log(chalk.red(`  CRASH [${injector.name}] ${err.message}`));
+
+        const injector = injectors[Math.floor(Math.random() * injectors.length)];
+        console.log(chalk.cyan(`Running injector: ${injector.name}`));
+
+        try {
+          const result = await injector.run(client);
+          reporter.addResult(result);
+
+          if (result.passed) {
+            this.consecutiveFailures = 0;
+            console.log(
+              chalk.green(`  PASS [${injector.name}] ${result.duration}ms${result.details ? ' - ' + result.details : ''}`)
+            );
+          } else {
+            this.consecutiveFailures++;
+            console.log(
+              chalk.red(`  FAIL [${injector.name}] ${result.duration}ms - ${result.error || 'unknown error'}`)
+            );
+            if (this.consecutiveFailures >= 5) {
+              this.circuitBreakerCooldown = true;
+              console.log(chalk.yellow.bold(`Circuit breaker tripped after ${this.consecutiveFailures} consecutive failures. Pausing for 60s.`));
+              setTimeout(() => {
+                this.circuitBreakerCooldown = false;
+                this.consecutiveFailures = 0;
+                console.log(chalk.yellow('Circuit breaker reset. Resuming experiments.'));
+              }, 60000);
+            }
+          }
+        } catch (err: any) {
+          this.consecutiveFailures++;
+          const result = {
+            injector: injector.name,
+            timestamp: new Date(),
+            passed: false,
+            duration: 0,
+            error: `Unhandled: ${err.message}`,
+          };
+          reporter.addResult(result);
+          console.log(chalk.red(`  CRASH [${injector.name}] ${err.message}`));
+          if (this.consecutiveFailures >= 5) {
+            this.circuitBreakerCooldown = true;
+            console.log(chalk.yellow.bold(`Circuit breaker tripped after ${this.consecutiveFailures} consecutive failures. Pausing for 60s.`));
+            setTimeout(() => {
+              this.circuitBreakerCooldown = false;
+              this.consecutiveFailures = 0;
+              console.log(chalk.yellow('Circuit breaker reset. Resuming experiments.'));
+            }, 60000);
+          }
+        }
+      } finally {
+        this.running = false;
       }
     }, this.intervalMs);
   }

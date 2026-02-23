@@ -10,15 +10,15 @@ export async function GET(
   const invite = await prisma.inviteCode.findUnique({ where: { code } })
 
   if (!invite) {
-    return NextResponse.json({ valid: false, error: 'Invalid invite code' })
+    return NextResponse.json({ valid: false, error: 'Invalid or expired invite code' })
   }
 
   if (invite.expiresAt && invite.expiresAt < new Date()) {
-    return NextResponse.json({ valid: false, error: 'Invite code expired' })
+    return NextResponse.json({ valid: false, error: 'Invalid or expired invite code' })
   }
 
   if (invite.useCount >= invite.maxUses) {
-    return NextResponse.json({ valid: false, error: 'Invite code already used' })
+    return NextResponse.json({ valid: false, error: 'Invalid or expired invite code' })
   }
 
   return NextResponse.json({ valid: true })

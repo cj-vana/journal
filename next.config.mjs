@@ -5,12 +5,19 @@ const nextConfig = {
     remotePatterns: [],
     unoptimized: false,
   },
-  serverExternalPackages: ['sharp', 'puppeteer-core'],
+  serverExternalPackages: ['sharp', 'puppeteer-core', 'isomorphic-dompurify', 'happy-dom'],
   async headers() {
     return [
       {
+        source: '/fonts/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
+          { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'" },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-XSS-Protection', value: '1; mode=block' },

@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { apiAuth } from '@/lib/api-auth'
 import { generateZipExport } from '@/lib/export'
 import { format } from 'date-fns'
 
 export async function POST() {
   try {
-    const session = await auth()
+    const session = await apiAuth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    if ((session.user as any).role !== 'admin') {
+    if (session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

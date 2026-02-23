@@ -47,19 +47,21 @@ export default function EntryFilters() {
   return (
     <div className="flex flex-wrap items-center gap-3 mb-6">
       <div className="relative flex-1 min-w-[200px]">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-600" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search entries..."
-          className="w-full pl-9 pr-8 py-2 bg-white border border-warm-200 rounded-xl text-warm-800 text-sm placeholder:text-warm-400 focus:outline-none focus:ring-2 focus:ring-warm-200"
+          aria-label="Search entries"
+          className="w-full pl-9 pr-8 py-2 bg-white border border-warm-200 rounded-xl text-warm-800 text-sm placeholder:text-warm-600 focus:outline-none focus:ring-2 focus:ring-warm-200"
         />
         {search && (
           <button
             type="button"
             onClick={() => setSearch('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-warm-400 hover:text-warm-600"
+            aria-label="Clear search"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-warm-600 hover:text-warm-600"
           >
             <X size={14} />
           </button>
@@ -72,6 +74,7 @@ export default function EntryFilters() {
           setSelectedTagId(e.target.value)
           updateParams({ tagId: e.target.value })
         }}
+        aria-label="Filter by tag"
         className="px-3 py-2 bg-white border border-warm-200 rounded-xl text-warm-800 text-sm focus:outline-none focus:ring-2 focus:ring-warm-200"
       >
         <option value="">All tags</option>
@@ -89,6 +92,7 @@ export default function EntryFilters() {
           setSort(newSort)
           updateParams({ sort: newSort })
         }}
+        aria-label={sort === 'newest' ? 'Sort by oldest first' : 'Sort by newest first'}
         className="flex items-center gap-1.5 px-3 py-2 bg-white border border-warm-200 rounded-xl text-warm-800 text-sm hover:bg-warm-50 transition-colors"
       >
         <ArrowUpDown size={14} />

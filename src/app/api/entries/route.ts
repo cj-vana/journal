@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { apiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { generateHTML } from '@tiptap/html'
@@ -39,17 +39,18 @@ const createEntrySchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth()
+    const session = await apiAuth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(req.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const page = Math.max(parseInt(searchParams.get('page') || '1') || 1, 1)
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20') || 20, 1), 100)
     const authorId = searchParams.get('authorId')
     const tagId = searchParams.get('tagId')
-    const search = searchParams.get('search')
+    const searchParam = searchParams.get('search')
+    const search = searchParam?.slice(0, 200)
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const sort = searchParams.get('sort') || 'newest'
@@ -78,13 +79,36 @@ export async function GET(req: NextRequest) {
       if (endDate) (where.entryDate as Record<string, unknown>).lte = new Date(endDate)
     }
 
+    // Members should not see other users' drafts
+    if (session.user.role !== 'admin') {
+      const draftFilter = {
+        OR: [
+          { isDraft: false },
+          { isDraft: { equals: null as unknown as boolean } },
+          { authorId: session.user.id },
+        ],
+      }
+      if (where.OR) {
+        // Restructure: move search OR into AND along with draft filter
+        const searchOr = where.OR
+        delete where.OR
+        where.AND = [{ OR: searchOr as unknown[] }, draftFilter]
+      } else {
+        where.AND = [draftFilter]
+      }
+    }
+
     const [entries, total] = await Promise.all([
       prisma.entry.findMany({
         where,
         include: {
           author: { select: { id: true, name: true, avatarColor: true } },
           tags: { include: { tag: true } },
-          media: true,
+          media: {
+            where: { type: 'image' },
+            take: 1,
+            select: { id: true, path: true, type: true },
+          },
         },
         orderBy: { entryDate: sort === 'oldest' ? 'asc' : 'desc' },
         skip: (page - 1) * limit,
@@ -107,7 +131,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
+    const session = await apiAuth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -130,51 +154,48 @@ export async function POST(req: NextRequest) {
       const json = JSON.parse(content)
       contentHtml = generateHTML(json, htmlExtensions)
     } catch {
-      contentHtml = content
+      contentHtml = `<p>${content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`
     }
 
-    const entry = await prisma.entry.create({
-      data: {
-        title: title || null,
-        content,
-        contentHtml,
-        authorId: session.user.id!,
-        entryDate: new Date(entryDate),
-        isDraft: isDraft ?? false,
-      },
-      include: {
-        author: { select: { id: true, name: true, avatarColor: true } },
-        tags: { include: { tag: true } },
-        media: true,
-      },
-    })
-
-    // Link media
-    if (mediaIds && mediaIds.length > 0) {
-      await prisma.media.updateMany({
-        where: { id: { in: mediaIds } },
-        data: { entryId: entry.id },
+    const fullEntry = await prisma.$transaction(async (tx) => {
+      const entry = await tx.entry.create({
+        data: {
+          title: title || null,
+          content,
+          contentHtml,
+          authorId: session.user.id!,
+          entryDate: new Date(entryDate),
+          isDraft: isDraft ?? false,
+        },
       })
-    }
 
-    // Create tag associations
-    if (tagIds && tagIds.length > 0) {
-      await prisma.entryTag.createMany({
-        data: tagIds.map((tagId) => ({
-          entryId: entry.id,
-          tagId,
-        })),
+      // Link media
+      if (mediaIds && mediaIds.length > 0) {
+        await tx.media.updateMany({
+          where: { id: { in: mediaIds } },
+          data: { entryId: entry.id },
+        })
+      }
+
+      // Create tag associations
+      if (tagIds && tagIds.length > 0) {
+        await tx.entryTag.createMany({
+          data: tagIds.map((tagId) => ({
+            entryId: entry.id,
+            tagId,
+          })),
+        })
+      }
+
+      // Re-fetch to include linked media and tags
+      return tx.entry.findUnique({
+        where: { id: entry.id },
+        include: {
+          author: { select: { id: true, name: true, avatarColor: true } },
+          tags: { include: { tag: true } },
+          media: true,
+        },
       })
-    }
-
-    // Re-fetch to include linked media and tags
-    const fullEntry = await prisma.entry.findUnique({
-      where: { id: entry.id },
-      include: {
-        author: { select: { id: true, name: true, avatarColor: true } },
-        tags: { include: { tag: true } },
-        media: true,
-      },
     })
 
     return NextResponse.json(fullEntry, { status: 201 })

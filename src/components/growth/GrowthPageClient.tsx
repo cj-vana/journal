@@ -1,9 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { GrowthChart } from './GrowthChart'
+import dynamic from 'next/dynamic'
 import { GrowthForm } from './GrowthForm'
 import { format, parseISO } from 'date-fns'
+
+const GrowthChart = dynamic(() => import('./GrowthChart'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white rounded-2xl border border-warm-200 shadow-sm p-6">
+      <div className="h-64 animate-pulse bg-warm-50 rounded-xl" />
+    </div>
+  ),
+})
 
 interface GrowthRecordData {
   id: string
@@ -180,7 +189,7 @@ export function GrowthPageClient({ initialRecords, userId, userRole }: Props) {
                         {canDelete && (
                           <button
                             onClick={() => handleDelete(record.id)}
-                            className="text-warm-400 hover:text-rose-600 transition-colors"
+                            className="text-warm-600 hover:text-rose-600 transition-colors"
                             title="Delete"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

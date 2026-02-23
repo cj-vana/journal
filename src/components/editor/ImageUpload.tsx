@@ -114,6 +114,7 @@ export default function ImageUpload({ editor, onUploadComplete }: ImageUploadPro
         type="file"
         accept="image/jpeg,image/png,image/gif,image/webp"
         onChange={handleFileChange}
+        aria-label="Upload image"
         className="hidden"
       />
       {isUploading && (

@@ -20,7 +20,7 @@ export default function EntryContent({ html }: EntryContentProps) {
         'prose-ul:text-warm-800 prose-ol:text-warm-800 ' +
         'prose-li:text-warm-800'
       }
-      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html.replace(/<img /g, '<img loading="lazy" ')) }}
     />
   )
 }

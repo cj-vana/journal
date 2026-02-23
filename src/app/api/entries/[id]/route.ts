@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { apiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { generateHTML } from '@tiptap/html'
@@ -45,7 +45,7 @@ type RouteContext = { params: Promise<{ id: string }> }
 
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const session = await auth()
+    const session = await apiAuth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -65,6 +65,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Entry not found' }, { status: 404 })
     }
 
+    if (entry.isDraft && entry.authorId !== session.user.id && session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Entry not found' }, { status: 404 })
+    }
+
     return NextResponse.json(entry)
   } catch (error) {
     console.error('Entry GET error:', error)
@@ -74,7 +78,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
 export async function PUT(req: NextRequest, context: RouteContext) {
   try {
-    const session = await auth()
+    const session = await apiAuth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -96,7 +100,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     }
 
     // IDOR protection: only author or admin can edit
-    const userRole = (session.user as any).role
+    const userRole = session.user.role
     if (existing.authorId !== session.user.id && userRole !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -111,50 +115,52 @@ export async function PUT(req: NextRequest, context: RouteContext) {
         const json = JSON.parse(content)
         updateData.contentHtml = generateHTML(json, htmlExtensions)
       } catch {
-        updateData.contentHtml = content
+        updateData.contentHtml = `<p>${content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`
       }
     }
     if (entryDate !== undefined) updateData.entryDate = new Date(entryDate)
     if (isDraft !== undefined) updateData.isDraft = isDraft
 
-    const entry = await prisma.entry.update({
-      where: { id },
-      data: updateData,
-    })
-
-    // Update tags
-    if (tagIds !== undefined) {
-      await prisma.entryTag.deleteMany({ where: { entryId: id } })
-      if (tagIds.length > 0) {
-        await prisma.entryTag.createMany({
-          data: tagIds.map((tagId) => ({ entryId: id, tagId })),
-        })
-      }
-    }
-
-    // Update media links
-    if (mediaIds !== undefined) {
-      // Unlink old media
-      await prisma.media.updateMany({
-        where: { entryId: id },
-        data: { entryId: null },
+    const fullEntry = await prisma.$transaction(async (tx) => {
+      const entry = await tx.entry.update({
+        where: { id },
+        data: updateData,
       })
-      // Link new media
-      if (mediaIds.length > 0) {
-        await prisma.media.updateMany({
-          where: { id: { in: mediaIds } },
-          data: { entryId: id },
-        })
-      }
-    }
 
-    const fullEntry = await prisma.entry.findUnique({
-      where: { id: entry.id },
-      include: {
-        author: { select: { id: true, name: true, avatarColor: true } },
-        tags: { include: { tag: true } },
-        media: true,
-      },
+      // Update tags
+      if (tagIds !== undefined) {
+        await tx.entryTag.deleteMany({ where: { entryId: id } })
+        if (tagIds.length > 0) {
+          await tx.entryTag.createMany({
+            data: tagIds.map((tagId) => ({ entryId: id, tagId })),
+          })
+        }
+      }
+
+      // Update media links
+      if (mediaIds !== undefined) {
+        // Unlink old media
+        await tx.media.updateMany({
+          where: { entryId: id },
+          data: { entryId: null },
+        })
+        // Link new media
+        if (mediaIds.length > 0) {
+          await tx.media.updateMany({
+            where: { id: { in: mediaIds } },
+            data: { entryId: id },
+          })
+        }
+      }
+
+      return tx.entry.findUnique({
+        where: { id: entry.id },
+        include: {
+          author: { select: { id: true, name: true, avatarColor: true } },
+          tags: { include: { tag: true } },
+          media: true,
+        },
+      })
     })
 
     return NextResponse.json(fullEntry)
@@ -166,7 +172,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
 
 export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const session = await auth()
+    const session = await apiAuth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -183,7 +189,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     }
 
     // IDOR protection: only author or admin can delete
-    const userRole = (session.user as any).role
+    const userRole = session.user.role
     if (entry.authorId !== session.user.id && userRole !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

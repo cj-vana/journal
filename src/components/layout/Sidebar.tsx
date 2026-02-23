@@ -69,7 +69,7 @@ export default function Sidebar({ appTitle, childName, user }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto" aria-label="Main navigation">
         {allItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           const Icon = item.icon
@@ -78,6 +78,8 @@ export default function Sidebar({ appTitle, childName, user }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? 'page' : undefined}
+              aria-label={collapsed ? item.label : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-xl py-2.5 px-4 text-sm font-medium transition-colors',
                 isActive
@@ -97,7 +99,9 @@ export default function Sidebar({ appTitle, childName, user }: SidebarProps) {
       {/* Collapse Toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="hidden lg:flex items-center justify-center p-2 mx-2 mb-2 text-warm-400 hover:text-warm-600 hover:bg-warm-100 rounded-xl transition-colors"
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-expanded={!collapsed}
+        className="hidden lg:flex items-center justify-center p-2 mx-2 mb-2 text-warm-600 hover:text-warm-600 hover:bg-warm-100 rounded-xl transition-colors"
       >
         {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
       </button>

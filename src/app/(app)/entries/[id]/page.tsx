@@ -63,7 +63,7 @@ export default async function EntryPage({ params }: EntryPageProps) {
           </div>
           <div>
             <p className="text-warm-800 text-sm font-medium">{entry.author.name}</p>
-            <p className="text-warm-400 text-xs">
+            <p className="text-warm-600 text-xs">
               {format(new Date(entry.entryDate), 'MMMM d, yyyy')}
             </p>
           </div>

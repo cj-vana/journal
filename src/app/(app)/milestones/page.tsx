@@ -35,7 +35,7 @@ export default async function MilestonesPage() {
         categories={MILESTONE_CATEGORIES as unknown as Array<{ value: string; label: string; color: string }>}
         milestones={serialized}
         userId={session.user!.id!}
-        userRole={(session.user as any).role}
+        userRole={session.user.role}
       />
     </div>
   )
