@@ -1,42 +1,43 @@
-version: '3.8'
+# Baby Journal — Production Docker Compose
+#
+# Quick start:
+#   1. Generate a secret:  openssl rand -base64 32
+#   2. Run:  AUTH_SECRET="your-secret" docker compose up -d
+#   3. Open http://localhost:3000 and complete the setup wizard.
+#
+# All data is stored in the "journal-data" volume at /data (SQLite DB + uploads).
+# Back up with:  docker cp baby-journal:/data ./backup
+#
+# For development (building from source), use docker-compose.dev.yml instead.
+
 services:
   journal:
-    build: .
+    image: ghcr.io/cj-vana/journal:latest
     container_name: baby-journal
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
     volumes:
       - journal-data:/data
     environment:
-      - DATABASE_URL=file:/data/db/journal.db
-      - AUTH_SECRET=${AUTH_SECRET}
-      - AUTH_URL=http://localhost:3000
-      - NEXTAUTH_URL=http://localhost:3000
-      - UPLOAD_DIR=/data/uploads
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - ENABLE_DEBUG_PROFILE=${ENABLE_DEBUG_PROFILE:-false}
-      - DEBUG_KEY=${DEBUG_KEY}
-    env_file:
-      - .env
-
-  chaos-monkey:
-    build: ./chaos-monkey
-    container_name: chaos-monkey
-    profiles: ["chaos"]
-    depends_on: [journal]
-    environment:
-      - TARGET_URL=http://journal:3000
-      - DEBUG_KEY=${DEBUG_KEY}
-      - CHAOS_INTERVAL_MS=30000
-      - CHAOS_PROBABILITY=0.5
-      - DOCKER_HOST=/var/run/docker.sock
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - journal-data:/data:ro
-    ports:
-      - "3001:3001"
+      DATABASE_URL: "file:/data/db/journal.db"
+      AUTH_SECRET: "${AUTH_SECRET:?Set AUTH_SECRET - generate with openssl rand -base64 32}"
+      AUTH_URL: "${AUTH_URL:-http://localhost:3000}"
+      NEXTAUTH_URL: "${AUTH_URL:-http://localhost:3000}"
+      UPLOAD_DIR: "/data/uploads"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/auth/session"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1"
 
 volumes:
   journal-data:

@@ -21,35 +21,43 @@ Built with Next.js, SQLite, and Docker for easy self-hosting.
 
 ### Docker (recommended)
 
+The easiest way to run Baby Journal — pulls a pre-built image from GitHub Container Registry:
+
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/journal.git
-cd journal
+# 1. Generate a secret key
+AUTH_SECRET=$(openssl rand -base64 32)
 
-# 2. Copy and configure environment
-cp .env.example .env
-# Edit .env — at minimum set AUTH_SECRET
-
-# 3. Start the app
-docker compose up -d
+# 2. Start the app
+AUTH_SECRET="$AUTH_SECRET" docker compose up -d
 ```
 
-The app will be available at `http://localhost:3000`. On first launch, you'll be greeted by the **setup wizard** which walks you through creating an admin account and configuring your journal.
+That's it! Open `http://localhost:3000` and complete the setup wizard.
+
+> **Behind a reverse proxy?** Set `AUTH_URL` to your public URL:
+> ```bash
+> AUTH_SECRET="..." AUTH_URL="https://journal.example.com" docker compose up -d
+> ```
 
 ### Automated Setup (Docker)
 
-If you prefer to skip the wizard (useful for CI/CD or scripted deployments), set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in your `.env` file. The entrypoint script will create the admin account automatically on first boot.
+To skip the setup wizard (useful for CI/CD or scripted deployments), pass `ADMIN_EMAIL` and `ADMIN_PASSWORD`:
 
 ```bash
-# .env
-AUTH_SECRET=your-secret-here   # generate with: openssl rand -base64 32
-ADMIN_EMAIL=you@example.com
-ADMIN_PASSWORD=your-secure-password
-AUTH_URL=http://localhost:3000
+AUTH_SECRET=$(openssl rand -base64 32) \
+ADMIN_EMAIL=you@example.com \
+ADMIN_PASSWORD=your-secure-password \
+docker compose up -d
 ```
 
+### Development (building from source)
+
+Developers who clone the repo should use the dev compose file:
+
 ```bash
-docker compose up -d
+git clone https://github.com/cj-vana/journal.git
+cd journal
+cp .env.example .env    # edit .env — set AUTH_SECRET at minimum
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 ## Environment Variables
@@ -255,7 +263,7 @@ TARGET_URL=http://localhost:3000 npx playwright test
 Or run via Docker Compose with the `chaos` profile:
 
 ```bash
-docker compose --profile chaos up chaos-monkey
+docker compose -f docker-compose.dev.yml --profile chaos up chaos-monkey
 ```
 
 Test coverage includes:
@@ -279,6 +287,13 @@ Test coverage includes:
 
 ## Docker Details
 
+Pre-built images are published to `ghcr.io/cj-vana/journal` for `linux/amd64` and `linux/arm64`.
+
+| File | Purpose |
+|---|---|
+| `docker-compose.yml` | **Production** — pulls pre-built image from GHCR |
+| `docker-compose.dev.yml` | **Development** — builds from source, includes chaos-monkey |
+
 The Dockerfile uses a multi-stage build:
 1. **deps** — Install Node.js dependencies
 2. **builder** — Build the Next.js app (standalone output)
@@ -291,8 +306,19 @@ The entrypoint runs Prisma migrations and seeds default data (tags, writing prom
 If running behind a reverse proxy (Nginx, Caddy, Traefik), set `AUTH_URL` to your public URL:
 
 ```bash
-AUTH_URL=https://journal.yourdomain.com
+AUTH_SECRET="..." AUTH_URL="https://journal.yourdomain.com" docker compose up -d
 ```
+
+## Releases
+
+Releases are automated via GitHub Actions. To create a new release:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This builds multi-platform Docker images, pushes them to GHCR, and creates a GitHub Release with a changelog.
 
 ## License
 
