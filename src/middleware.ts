@@ -12,6 +12,10 @@ export default auth((req) => {
   // Invite validation endpoint is public
   if (pathname.match(/^\/api\/invite\/[^/]+$/)) return NextResponse.next()
 
+  // Shower/guestbook public routes
+  if (pathname === '/api/shower/validate' || pathname.startsWith('/shower/')) return NextResponse.next()
+  if (pathname === '/api/shower/messages' && req.method === 'POST') return NextResponse.next()
+
   // Debug endpoints - only in non-production when debug mode is enabled
   if (
     (pathname === '/api/debug' || pathname.startsWith('/api/debug/')) &&

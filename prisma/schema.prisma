@@ -141,5 +141,18 @@ model AppSettings {
   childBirthDate DateTime?
   theme          String    @default("warm")
   gender         String    @default("neutral")
+  showerEnabled  Boolean   @default(false)
+  showerCode     String?
   updatedAt      DateTime  @updatedAt
+}
+
+model GuestMessage {
+  id                String    @id @default(cuid())
+  guestName         String
+  message           String
+  showerCode        String
+  promotedToEntryId String?
+  createdAt         DateTime  @default(now())
+  @@index([showerCode])
+  @@index([createdAt])
 }

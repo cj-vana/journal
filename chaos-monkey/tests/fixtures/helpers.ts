@@ -9,6 +9,7 @@ export const ROUTES = {
   settings: '/settings',
   settingsUsers: '/settings/users',
   export: '/export',
+  guestbook: '/guestbook',
   login: '/login',
   register: '/register',
   setup: '/setup',
@@ -21,6 +22,7 @@ export const ALL_APP_ROUTES = [
   ROUTES.milestones,
   ROUTES.growth,
   ROUTES.settings,
+  ROUTES.guestbook,
   ROUTES.export,
 ];
 
@@ -117,6 +119,37 @@ export async function deleteEntryViaAPI(page: Page, id: string): Promise<void> {
 
 export async function waitForPageReady(page: Page): Promise<void> {
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => {});
+}
+
+export async function enableShowerMode(page: Page): Promise<string> {
+  // Enable shower mode and return the code
+  const res = await page.request.put('/api/shower/config', {
+    data: { enabled: true },
+  });
+  const data = await res.json();
+  return data.showerCode;
+}
+
+export async function disableShowerMode(page: Page): Promise<void> {
+  await page.request.put('/api/shower/config', {
+    data: { enabled: false },
+  });
+}
+
+export async function submitGuestMessage(
+  page: Page,
+  code: string,
+  guestName: string,
+  message: string
+): Promise<string | null> {
+  const res = await page.request.post('/api/shower/messages', {
+    data: { guestName, message, showerCode: code },
+  });
+  if (res.ok()) {
+    const data = await res.json();
+    return data.id || null;
+  }
+  return null;
 }
 
 // 1x1 white PNG as base64

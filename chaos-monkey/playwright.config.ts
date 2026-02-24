@@ -32,7 +32,7 @@ export default defineConfig({
     },
     {
       name: 'e2e',
-      testMatch: /tests\/(auth|entries|milestones|growth|uploads|export|settings)\/.+\.spec\.ts/,
+      testMatch: /tests\/(auth|entries|milestones|growth|uploads|export|settings|shower)\/.+\.spec\.ts/,
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'] },
     },

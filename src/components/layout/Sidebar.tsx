@@ -14,6 +14,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Gift,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +37,7 @@ const navItems = [
 ]
 
 const adminItems = [
+  { href: '/guestbook', label: 'Guestbook', icon: Gift },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
