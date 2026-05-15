@@ -3,10 +3,13 @@ import { apiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { contentToHtml } from '@/lib/tiptap-html-extensions'
+import { parseDateInput } from '@/lib/dates'
 import path from 'path'
 import fs from 'fs/promises'
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || './data/uploads'
+const UPLOAD_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'uploads')
 
 const updateEntrySchema = z.object({
   title: z.string().optional(),
@@ -87,7 +90,11 @@ export async function PUT(req: NextRequest, context: RouteContext) {
       updateData.content = content
       updateData.contentHtml = contentToHtml(content)
     }
-    if (entryDate !== undefined) updateData.entryDate = new Date(entryDate)
+    if (entryDate !== undefined) {
+      const parsedEntryDate = parseDateInput(entryDate)
+      if (!parsedEntryDate) return NextResponse.json({ error: 'Invalid entryDate' }, { status: 400 })
+      updateData.entryDate = parsedEntryDate
+    }
     if (isDraft !== undefined) updateData.isDraft = isDraft
 
     const fullEntry = await prisma.$transaction(async (tx) => {
@@ -108,20 +115,24 @@ export async function PUT(req: NextRequest, context: RouteContext) {
 
       // Update media links
       if (mediaIds !== undefined) {
-        // Unlink old media
+        const existingMediaIds = await tx.media.findMany({
+          where: { entryId: id, id: { in: mediaIds } },
+          select: { id: true },
+        })
+        const retainedIds = new Set(existingMediaIds.map((media) => media.id))
+
         await tx.media.updateMany({
-          where: { entryId: id },
+          where: { entryId: id, id: { notIn: [...retainedIds] } },
           data: { entryId: null },
         })
-        // Link new media (only media uploaded by this user or already linked to this entry)
         if (mediaIds.length > 0) {
           await tx.media.updateMany({
             where: {
               id: { in: mediaIds },
               OR: [
+                { id: { in: [...retainedIds] } },
                 { entryId: null, uploadedBy: session.user.id! },
                 { entryId: null, uploadedBy: null },
-                { entryId: id },
               ],
             },
             data: { entryId: id },
@@ -171,14 +182,13 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     }
 
     // Delete media files from disk in parallel (with path traversal protection)
-    const resolvedUploadDir = path.resolve(UPLOAD_DIR)
     await Promise.all(entry.media.map(async (media) => {
-      const filePath = path.resolve(path.join(UPLOAD_DIR, media.path))
-      if (!filePath.startsWith(resolvedUploadDir + path.sep)) return
+      const filePath = path.resolve(UPLOAD_DIR, media.path)
+      if (!filePath.startsWith(UPLOAD_DIR + path.sep)) return
       await fs.unlink(filePath).catch(() => {})
       if (media.type === 'image') {
         const thumbPath = filePath.replace('.webp', '_thumb.webp')
-        if (thumbPath.startsWith(resolvedUploadDir + path.sep)) {
+        if (thumbPath.startsWith(UPLOAD_DIR + path.sep)) {
           await fs.unlink(thumbPath).catch(() => {})
         }
       }

@@ -19,8 +19,6 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - ENABLE_DEBUG_PROFILE=${ENABLE_DEBUG_PROFILE:-false}
       - DEBUG_KEY=${DEBUG_KEY}
-    env_file:
-      - .env
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/auth/session"]
       interval: 30s

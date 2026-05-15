@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { apiAuth } from '@/lib/api-auth'
+import { prisma } from '@/lib/prisma'
 import path from 'path'
 import { createReadStream } from 'fs'
 import { stat } from 'fs/promises'
+import { Readable } from 'stream'
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || './data/uploads'
+const UPLOAD_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'uploads')
 
 const MIME_TYPES: Record<string, string> = {
   '.webp': 'image/webp',
@@ -29,29 +33,38 @@ export async function GET(
   }
 
   const { path: pathSegments } = await params
-  const filePath = path.join(UPLOAD_DIR, ...pathSegments)
+  const requestedPath = pathSegments.join('/')
+  const mediaPath = requestedPath.replace(/_thumb(?=\.[^.]+$)/, '')
+  const resolvedPath = path.resolve(UPLOAD_DIR, ...pathSegments)
 
   // Path traversal protection
-  const resolvedPath = path.resolve(filePath)
-  const resolvedUploadDir = path.resolve(UPLOAD_DIR)
-  if (!resolvedPath.startsWith(resolvedUploadDir + path.sep) && resolvedPath !== resolvedUploadDir) {
+  if (!resolvedPath.startsWith(UPLOAD_DIR + path.sep) && resolvedPath !== UPLOAD_DIR) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   try {
+    const media = await prisma.media.findFirst({
+      where: { path: mediaPath },
+      include: { entry: { select: { authorId: true } } },
+    })
+
+    if (!media) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
+    const canRead = session.user.role === 'admin'
+      || media.entry?.authorId === session.user.id
+      || (!media.entryId && media.uploadedBy === session.user.id)
+
+    if (!canRead) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
     const stats = await stat(resolvedPath)
     const ext = path.extname(resolvedPath).toLowerCase()
     const contentType = MIME_TYPES[ext] || 'application/octet-stream'
 
-    // Stream file instead of buffering entire file in memory
-    const nodeStream = createReadStream(resolvedPath)
-    const stream = new ReadableStream({
-      start(controller) {
-        nodeStream.on('data', (chunk: Buffer | string) => controller.enqueue(new Uint8Array(Buffer.from(chunk))))
-        nodeStream.on('end', () => controller.close())
-        nodeStream.on('error', (err) => controller.error(err))
-      },
-    })
+    const stream = Readable.toWeb(createReadStream(resolvedPath)) as ReadableStream<Uint8Array>
 
     return new NextResponse(stream, {
       headers: {

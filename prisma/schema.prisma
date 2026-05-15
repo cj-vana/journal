@@ -37,8 +37,9 @@ model Entry {
   entryDate   DateTime
   isDraft     Boolean   @default(false)
 
-  tags        EntryTag[]
-  media       Media[]
+  tags                  EntryTag[]
+  media                 Media[]
+  promotedGuestMessages GuestMessage[]
 
   @@index([authorId])
   @@index([entryDate])
@@ -69,7 +70,7 @@ model Media {
   entryId    String?
   entry      Entry?   @relation(fields: [entryId], references: [id], onDelete: Cascade)
   uploadedBy String?
-  uploader   User?    @relation(fields: [uploadedBy], references: [id])
+  uploader   User?    @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
   type       String
   filename   String
   path       String
@@ -152,6 +153,7 @@ model GuestMessage {
   message           String
   showerCode        String
   promotedToEntryId String?
+  promotedToEntry   Entry?    @relation(fields: [promotedToEntryId], references: [id], onDelete: SetNull)
   createdAt         DateTime  @default(now())
   @@index([showerCode])
   @@index([createdAt])

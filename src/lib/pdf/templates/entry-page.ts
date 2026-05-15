@@ -4,7 +4,9 @@ import { format } from 'date-fns'
 import { escapeHtml, sanitizeHtml } from '@/lib/sanitize'
 import type { AccentColors } from '../generator'
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || './data/uploads'
+const UPLOAD_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'uploads')
 
 interface EntryMedia {
   type: string
@@ -32,7 +34,8 @@ interface EntryForPdf {
 
 async function embedImage(mediaPath: string, mimeType: string): Promise<string> {
   try {
-    const fullPath = path.join(UPLOAD_DIR, mediaPath)
+    const fullPath = path.resolve(UPLOAD_DIR, mediaPath)
+    if (!fullPath.startsWith(UPLOAD_DIR + path.sep)) return ''
     const imageBuffer = await fs.readFile(fullPath)
     const base64 = imageBuffer.toString('base64')
     return `data:${mimeType};base64,${base64}`

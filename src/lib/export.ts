@@ -1,5 +1,4 @@
 import archiver from 'archiver'
-import fsSync from 'fs'
 import fs from 'fs/promises'
 import path from 'path'
 import { prisma } from './prisma'

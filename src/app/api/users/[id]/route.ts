@@ -81,6 +81,22 @@ export async function DELETE(
       )
     }
 
+    const dependencies = await prisma.$transaction(async (tx) => ({
+      entries: await tx.entry.count({ where: { authorId: id } }),
+      milestones: await tx.milestone.count({ where: { recordedBy: id } }),
+      growthRecords: await tx.growthRecord.count({ where: { recordedBy: id } }),
+      mediaUploads: await tx.media.count({ where: { uploadedBy: id } }),
+      inviteCodes: await tx.inviteCode.count({ where: { createdById: id } }),
+    }))
+
+    const hasDependencies = Object.values(dependencies).some((count) => count > 0)
+    if (hasDependencies) {
+      return NextResponse.json(
+        { error: 'User has journal data and cannot be deleted', dependencies },
+        { status: 409 }
+      )
+    }
+
     await prisma.user.delete({ where: { id } })
 
     return NextResponse.json({ success: true })

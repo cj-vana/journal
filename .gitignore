@@ -49,3 +49,7 @@ prisma/data/
 *.db-shm
 .turbo/
 dist/
+
+.claude/
+claude-progress.txt
+init.sh

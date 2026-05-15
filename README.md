@@ -14,6 +14,7 @@ Built with Next.js, SQLite, and Docker for easy self-hosting.
 - **PDF book export** — Generates a scrapbook-style PDF with cover page, table of contents by year/month, and all entries, milestones, and growth data
 - **ZIP data export** — Full backup of the database, media files, and settings as a downloadable archive
 - **Gender-based color themes** — Girl (rose), Boy (sky), or Neutral (sage) palettes that apply across the entire UI and PDF exports
+- **Baby shower guestbook** — Optional shower mode lets guests submit wishes with a shared code, then admins can promote messages into journal entries
 - **Setup wizard** — Guided first-run experience that creates the admin account and configures the journal
 - **Mobile-friendly** — Responsive sidebar layout that works on desktop and mobile
 
@@ -207,7 +208,8 @@ The database uses SQLite with the following models:
 - **GrowthRecord** — Height, weight, and head circumference measurements
 - **InviteCode** — Single-use or multi-use codes for inviting family members
 - **WritingPrompt** — Daily prompts shown on the dashboard
-- **AppSettings** — Singleton settings (child name, title, birth date, theme)
+- **AppSettings** — Singleton settings (child name, title, birth date, theme, shower mode)
+- **GuestMessage** — Baby shower guestbook submissions that admins can promote into entries
 
 ## Theming
 
@@ -229,6 +231,10 @@ Themes can be set during initial setup or changed at any time in Settings. The s
 2. Share the invite code with a family member
 3. They register at `/register` using the code
 4. Members can create and edit their own entries; admins can manage all content
+
+## Baby Shower Guestbook
+
+Admins can enable shower mode from Settings and share `/guestbook` plus the generated code with guests. Guest submissions are visible only to admins until they are deleted or promoted into journal entries.
 
 Roles:
 - **Admin** — Full access, can manage users, settings, and all entries

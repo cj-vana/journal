@@ -47,6 +47,38 @@ jobs:
             type=semver,pattern={{major}}
             type=raw,value=latest,enable=${{ !contains(github.ref_name, '-') }}
 
+      - name: Build smoke-test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          platforms: linux/amd64
+          tags: journal-smoke:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test container
+        run: |
+          docker run -d --name journal-smoke \
+            -e DATABASE_URL=file:/data/db/journal.db \
+            -e AUTH_SECRET=release-smoke-secret-minimum-32-characters \
+            -e AUTH_URL=http://localhost:3000 \
+            -e NEXTAUTH_URL=http://localhost:3000 \
+            -p 3000:3000 \
+            journal-smoke:${{ github.sha }}
+          for i in $(seq 1 30); do
+            if wget --spider -q http://localhost:3000/api/auth/session; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs journal-smoke
+          exit 1
+
+      - name: Clean up smoke test
+        if: always()
+        run: docker rm -f journal-smoke || true
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:

@@ -36,10 +36,9 @@ test.describe('Export functionality', () => {
       failOnStatusCode: false,
     });
 
-    // PDF export requires Puppeteer/Chromium - may return 500 in dev without it
-    // Accept any response that doesn't crash the server
-    const status = response.status();
-    expect(status === 200 || status === 400 || status === 500, `PDF export returned ${status}`).toBeTruthy();
+    // PDF export should succeed in the supported Docker/CI runtime with Chromium installed.
+    expect(response.status(), `PDF export returned ${response.status()}`).toBe(200);
+    expect(response.headers()['content-type']).toContain('application/pdf');
   });
 
   test('should handle export with no entries', async ({ authedPage }) => {

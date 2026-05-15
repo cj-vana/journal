@@ -4,6 +4,7 @@ import EntryCard from '@/components/entries/EntryCard'
 import EntryFilters from '@/components/entries/EntryFilters'
 import Link from 'next/link'
 import { Plus, BookOpen } from 'lucide-react'
+import type { Prisma } from '@prisma/client'
 import type { EntryWithRelations } from '@/types'
 import { Suspense } from 'react'
 
@@ -28,8 +29,8 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
   const sort = params.sort || 'newest'
   const drafts = params.drafts
 
-  const where: Record<string, unknown> = {}
-  const andConditions: Record<string, unknown>[] = []
+  const where: Prisma.EntryWhereInput = {}
+  const andConditions: Prisma.EntryWhereInput[] = []
 
   if (drafts === 'true') {
     where.isDraft = true
@@ -60,7 +61,6 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
       andConditions.push({
         OR: [
           { isDraft: false },
-          { isDraft: { equals: null as unknown as boolean } },
           { authorId: session.user.id },
         ],
       })

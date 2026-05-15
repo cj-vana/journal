@@ -51,9 +51,6 @@ export async function POST(
       if (!guestMessage) {
         throw new Error('NOT_FOUND')
       }
-      if (guestMessage.promotedToEntryId) {
-        throw new Error('ALREADY_PROMOTED')
-      }
 
       const tiptapDoc = {
         type: 'doc',
@@ -89,10 +86,13 @@ export async function POST(
         },
       })
 
-      await tx.guestMessage.update({
-        where: { id },
+      const promoted = await tx.guestMessage.updateMany({
+        where: { id, promotedToEntryId: null },
         data: { promotedToEntryId: created.id },
       })
+      if (promoted.count === 0) {
+        throw new Error('ALREADY_PROMOTED')
+      }
 
       return created
     })

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { apiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { parseDateInput } from '@/lib/dates'
 
 export async function GET() {
   try {
@@ -58,9 +59,13 @@ export async function PUT(req: NextRequest) {
     if (parsed.data.childName !== undefined) data.childName = parsed.data.childName
     if (parsed.data.appTitle !== undefined) data.appTitle = parsed.data.appTitle
     if (parsed.data.childBirthDate !== undefined) {
-      data.childBirthDate = parsed.data.childBirthDate
-        ? new Date(parsed.data.childBirthDate)
-        : null
+      if (parsed.data.childBirthDate) {
+        const parsedBirthDate = parseDateInput(parsed.data.childBirthDate)
+        if (!parsedBirthDate) return NextResponse.json({ error: 'Invalid childBirthDate' }, { status: 400 })
+        data.childBirthDate = parsedBirthDate
+      } else {
+        data.childBirthDate = null
+      }
     }
     if (parsed.data.gender !== undefined) data.gender = parsed.data.gender
 

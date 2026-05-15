@@ -3,6 +3,8 @@ import { apiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { contentToHtml } from '@/lib/tiptap-html-extensions'
+import { parseDateInput, parseDateOnlyEnd } from '@/lib/dates'
+import type { Prisma } from '@prisma/client'
 
 const createEntrySchema = z.object({
   title: z.string().optional(),
@@ -32,9 +34,9 @@ export async function GET(req: NextRequest) {
     const sort = searchParams.get('sort') || 'newest'
     const drafts = searchParams.get('drafts')
 
-    const where: Record<string, unknown> = {}
+    const where: Prisma.EntryWhereInput = {}
 
-    if (authorId) where.authorId = authorId
+    if (authorId && session.user.role === 'admin') where.authorId = authorId
     if (drafts === 'true') {
       where.isDraft = true
     } else if (drafts === 'false') {
@@ -50,9 +52,18 @@ export async function GET(req: NextRequest) {
       ]
     }
     if (startDate || endDate) {
-      where.entryDate = {}
-      if (startDate) (where.entryDate as Record<string, unknown>).gte = new Date(startDate)
-      if (endDate) (where.entryDate as Record<string, unknown>).lte = new Date(endDate)
+      const dateFilter: Prisma.DateTimeFilter = {}
+      if (startDate) {
+        const parsedStart = parseDateInput(startDate)
+        if (!parsedStart) return NextResponse.json({ error: 'Invalid startDate' }, { status: 400 })
+        dateFilter.gte = parsedStart
+      }
+      if (endDate) {
+        const parsedEnd = parseDateOnlyEnd(endDate)
+        if (!parsedEnd) return NextResponse.json({ error: 'Invalid endDate' }, { status: 400 })
+        dateFilter.lte = parsedEnd
+      }
+      where.entryDate = dateFilter
     }
 
     // Non-admin users can only see their own entries
@@ -106,6 +117,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { title, content, entryDate, tagIds, mediaIds, isDraft } = parsed.data
+    const parsedEntryDate = parseDateInput(entryDate)
+    if (!parsedEntryDate) {
+      return NextResponse.json({ error: 'Invalid entryDate' }, { status: 400 })
+    }
 
     // Generate HTML from Tiptap JSON
     const contentHtml = contentToHtml(content)
@@ -117,7 +132,7 @@ export async function POST(req: NextRequest) {
           content,
           contentHtml,
           authorId: session.user.id!,
-          entryDate: new Date(entryDate),
+          entryDate: parsedEntryDate,
           isDraft: isDraft ?? false,
         },
       })

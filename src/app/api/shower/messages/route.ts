@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import DOMPurify from 'isomorphic-dompurify'
 import crypto from 'crypto'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 function constantTimeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false
@@ -30,6 +31,12 @@ export async function POST(req: NextRequest) {
     }
 
     const { guestName, message, showerCode } = parsed.data
+    const forwardedFor = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    const clientIp = forwardedFor || req.headers.get('x-real-ip') || 'unknown'
+
+    if (!checkRateLimit(`shower:${showerCode}:${clientIp}`, 10, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: 'Too many submissions' }, { status: 429 })
+    }
 
     const settings = await prisma.appSettings.findFirst({
       where: { id: 'singleton' },
