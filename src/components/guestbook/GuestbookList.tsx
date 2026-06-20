@@ -11,6 +11,7 @@ interface GuestMessage {
   message: string
   promotedToEntryId: string | null
   createdAt: string
+  eventTitle: string | null
 }
 
 export default function GuestbookList({ messages: initial }: { messages: GuestMessage[] }) {
@@ -24,7 +25,7 @@ export default function GuestbookList({ messages: initial }: { messages: GuestMe
     setActionId(id)
     setError(null)
     try {
-      const res = await fetch(`/api/shower/messages/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/events/messages/${id}`, { method: 'DELETE' })
       if (res.ok) {
         setMessages((prev) => prev.filter((m) => m.id !== id))
       } else {
@@ -43,7 +44,7 @@ export default function GuestbookList({ messages: initial }: { messages: GuestMe
     setActionId(id)
     setError(null)
     try {
-      const res = await fetch(`/api/shower/messages/${id}`, { method: 'POST' })
+      const res = await fetch(`/api/events/messages/${id}`, { method: 'POST' })
       if (res.ok) {
         const data = await res.json()
         setMessages((prev) =>
@@ -91,8 +92,13 @@ export default function GuestbookList({ messages: initial }: { messages: GuestMe
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <h3 className="font-semibold text-warm-800">{msg.guestName}</h3>
+                {msg.eventTitle && (
+                  <span className="text-xs bg-warm-100 text-warm-600 px-2 py-0.5 rounded-full">
+                    {msg.eventTitle}
+                  </span>
+                )}
                 {msg.promotedToEntryId && (
                   <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                     Promoted
