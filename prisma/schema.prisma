@@ -23,6 +23,7 @@ model User {
   growthRecords GrowthRecord[]
   mediaUploads  Media[]
   invitesCreated InviteCode[] @relation("CreatedInvites")
+  eventsCreated  Event[]      @relation("CreatedEvents")
 }
 
 model Entry {
@@ -142,8 +143,6 @@ model AppSettings {
   childBirthDate DateTime?
   theme          String    @default("warm")
   gender         String    @default("neutral")
-  showerEnabled  Boolean   @default(false)
-  showerCode     String?
   updatedAt      DateTime  @updatedAt
 }
 
@@ -151,10 +150,32 @@ model GuestMessage {
   id                String    @id @default(cuid())
   guestName         String
   message           String
-  showerCode        String
+  showerCode        String?
+  eventId           String?
+  event             Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   promotedToEntryId String?
   promotedToEntry   Entry?    @relation(fields: [promotedToEntryId], references: [id], onDelete: SetNull)
   createdAt         DateTime  @default(now())
+  @@index([eventId])
   @@index([showerCode])
   @@index([createdAt])
+}
+
+model Event {
+  id             String         @id @default(cuid())
+  code           String         @unique
+  type           String         @default("party")
+  title          String
+  honoreeName    String?
+  eventDate      DateTime?
+  enabled        Boolean        @default(true)
+  welcomeMessage String?
+  createdById    String
+  createdBy      User           @relation("CreatedEvents", fields: [createdById], references: [id])
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  messages       GuestMessage[]
+
+  @@index([code])
+  @@index([enabled])
 }
