@@ -28,7 +28,7 @@ services:
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/auth/session"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/auth/session"]
       interval: 30s
       timeout: 10s
       retries: 3

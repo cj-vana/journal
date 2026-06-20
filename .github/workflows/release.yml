@@ -65,7 +65,7 @@ jobs:
             -p 3000:3000 \
             journal-smoke:${{ github.sha }}
           for i in $(seq 1 30); do
-            if wget -q -O /dev/null http://localhost:3000/api/auth/session; then
+            if wget -q -O /dev/null http://127.0.0.1:3000/api/auth/session; then
               exit 0
             fi
             sleep 2
