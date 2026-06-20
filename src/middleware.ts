@@ -5,6 +5,11 @@ export default auth((req) => {
   const { pathname } = req.nextUrl
   const isLoggedIn = !!req.auth
 
+  // Back-compat: old baby-shower links now live under /party
+  if (pathname.startsWith('/shower/')) {
+    return NextResponse.redirect(new URL(pathname.replace('/shower/', '/party/'), req.url), 308)
+  }
+
   // Public routes - exact match or path segment match to prevent prefix attacks
   const publicPaths = ['/login', '/register', '/setup', '/api/auth', '/api/setup']
   const isPublicPath = publicPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
@@ -12,9 +17,10 @@ export default auth((req) => {
   // Invite validation endpoint is public
   if (pathname.match(/^\/api\/invite\/[^/]+$/)) return NextResponse.next()
 
-  // Shower/guestbook public routes
-  if (pathname === '/api/shower/validate' || pathname.startsWith('/shower/')) return NextResponse.next()
-  if (pathname === '/api/shower/messages' && req.method === 'POST') return NextResponse.next()
+  // Event guestbook public routes
+  if (pathname === '/api/events/validate' && req.method === 'GET') return NextResponse.next()
+  if (pathname === '/api/events/messages' && req.method === 'POST') return NextResponse.next()
+  if (pathname.startsWith('/party/')) return NextResponse.next()
 
   // Debug endpoints - only in non-production when debug mode is enabled
   if (
