@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import MobileNav from './MobileNav'
@@ -18,8 +18,65 @@ interface AppShellProps {
   children: ReactNode
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 export default function AppShell({ appTitle, childName, user, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setMobileMenuOpen(false)
+      return
+    }
+
+    if (e.key === 'Tab' && drawerRef.current) {
+      const focusableElements = drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+      if (focusableElements.length === 0) return
+
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement.focus()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement.focus()
+        }
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement
+      document.addEventListener('keydown', handleKeyDown)
+
+      // Focus the first focusable element after mount
+      requestAnimationFrame(() => {
+        if (drawerRef.current) {
+          const focusableElements = drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+          if (focusableElements.length > 0) {
+            focusableElements[0].focus()
+          }
+        }
+      })
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+
+      // Return focus to previously focused element
+      if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
+        previousFocusRef.current.focus()
+      }
+    }
+  }, [mobileMenuOpen, handleKeyDown])
 
   return (
     <>
@@ -37,11 +94,12 @@ export default function AppShell({ appTitle, childName, user, children }: AppShe
             className="fixed inset-0 bg-black/50"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed left-0 top-0 h-full w-64 bg-warm-50 border-r border-warm-200 z-50 overflow-y-auto">
+          <div ref={drawerRef} className="fixed left-0 top-0 h-full w-64 bg-warm-50 border-r border-warm-200 z-50 overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-warm-200">
               <h1 className="font-accent text-2xl text-warm-800">{appTitle}</h1>
               <button
                 onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close navigation menu"
                 className="p-1 text-warm-600 hover:text-warm-600 rounded-lg"
               >
                 <X className="w-5 h-5" />

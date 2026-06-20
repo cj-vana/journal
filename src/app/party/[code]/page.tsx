@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { eventHeading, eventMeta } from '@/lib/events'
+import { eventHeading } from '@/lib/events'
 
 type PageState = 'loading' | 'invalid' | 'form' | 'submitted'
 
@@ -61,7 +61,7 @@ export default function PartyGuestPage({ params }: { params: Promise<{ code: str
 
   if (state === 'loading') {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-warm-200 p-8 text-center">
+      <div className="bg-white rounded-2xl shadow-sm border border-warm-200 p-8 text-center" role="status" aria-live="polite">
         <div className="animate-pulse text-warm-600">Loading...</div>
       </div>
     )
@@ -78,7 +78,7 @@ export default function PartyGuestPage({ params }: { params: Promise<{ code: str
 
   if (state === 'submitted') {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-warm-200 p-8 text-center" data-theme={info.theme}>
+      <div className="bg-white rounded-2xl shadow-sm border border-warm-200 p-8 text-center" data-theme={info.theme} role="status">
         <div className="text-4xl mb-4">{info.emoji}</div>
         <h1 className="text-2xl font-accent text-warm-800 mb-2">Thank You!</h1>
         <p className="text-warm-600">
@@ -126,7 +126,7 @@ export default function PartyGuestPage({ params }: { params: Promise<{ code: str
           <p className="text-xs text-warm-500 mt-1">{message.length}/2000</p>
         </div>
 
-        {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3">{error}</p>}
+        {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3" role="alert">{error}</p>}
 
         <button
           type="submit"

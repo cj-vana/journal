@@ -57,22 +57,29 @@ export function GrowthPageClient({ initialRecords, userId, userRole }: Props) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    if (res.ok) {
-      const created = await res.json()
-      setRecords((prev) => [...prev, created].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-      ))
-      setShowForm(false)
+    if (!res.ok) {
+      const body = await res.json().catch(() => null)
+      throw new Error(body?.error || 'Failed to save measurement. Please try again.')
     }
+    const created = await res.json()
+    setRecords((prev) => [...prev, created].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    ))
+    setShowForm(false)
   }
 
   async function handleDelete(id: string) {
     if (!window.confirm('Are you sure you want to delete this growth record?')) {
       return
     }
-    const res = await fetch(`/api/growth/${id}`, { method: 'DELETE' })
-    if (res.ok) {
+    try {
+      const res = await fetch(`/api/growth/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        throw new Error('delete failed')
+      }
       setRecords((prev) => prev.filter((r) => r.id !== id))
+    } catch {
+      window.alert('Failed to delete the growth record. Please try again.')
     }
   }
 

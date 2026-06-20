@@ -40,9 +40,10 @@ interface Props {
   }
   onSubmit: (data: Record<string, unknown>) => void
   onCancel: () => void
+  error?: string | null
 }
 
-export function MilestoneForm({ initialData, onSubmit, onCancel }: Props) {
+export function MilestoneForm({ initialData, onSubmit, onCancel, error }: Props) {
   const [title, setTitle] = useState(initialData?.title || '')
   const [description, setDescription] = useState(initialData?.description || '')
   const [date, setDate] = useState(initialData?.date || format(new Date(), 'yyyy-MM-dd'))
@@ -88,10 +89,11 @@ export function MilestoneForm({ initialData, onSubmit, onCancel }: Props) {
       {/* Suggestion dropdown */}
       {!initialData && (
         <div className="mb-4">
-          <label className="block text-sm font-medium text-warm-600 mb-1">
+          <label htmlFor="ms-quick" className="block text-sm font-medium text-warm-600 mb-1">
             Quick select
           </label>
           <select
+            id="ms-quick"
             value=""
             onChange={(e) => { if (e.target.value) handleSuggestionSelect(e.target.value) }}
             className="w-full px-3 py-2 rounded-xl border border-warm-200 bg-warm-50 text-warm-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400"
@@ -106,10 +108,11 @@ export function MilestoneForm({ initialData, onSubmit, onCancel }: Props) {
 
       {/* Title */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-warm-600 mb-1">
+        <label htmlFor="ms-title" className="block text-sm font-medium text-warm-600 mb-1">
           Title *
         </label>
         <input
+          id="ms-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -121,10 +124,11 @@ export function MilestoneForm({ initialData, onSubmit, onCancel }: Props) {
 
       {/* Date */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-warm-600 mb-1">
+        <label htmlFor="ms-date" className="block text-sm font-medium text-warm-600 mb-1">
           Date *
         </label>
         <input
+          id="ms-date"
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -135,10 +139,11 @@ export function MilestoneForm({ initialData, onSubmit, onCancel }: Props) {
 
       {/* Category */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-warm-600 mb-1">
+        <label htmlFor="ms-category" className="block text-sm font-medium text-warm-600 mb-1">
           Category
         </label>
         <select
+          id="ms-category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className="w-full px-3 py-2 rounded-xl border border-warm-200 bg-white text-warm-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400"
@@ -152,10 +157,11 @@ export function MilestoneForm({ initialData, onSubmit, onCancel }: Props) {
 
       {/* Description */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-warm-600 mb-1">
+        <label htmlFor="ms-description" className="block text-sm font-medium text-warm-600 mb-1">
           Description
         </label>
         <textarea
+          id="ms-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Tell us about this moment..."
@@ -186,6 +192,9 @@ export function MilestoneForm({ initialData, onSubmit, onCancel }: Props) {
           ))}
         </div>
       </div>
+
+      {/* Error */}
+      {error && <p role="alert" className="text-sm text-red-600 bg-red-50 rounded-lg p-3 mb-4">{error}</p>}
 
       {/* Buttons */}
       <div className="flex gap-3 justify-end">

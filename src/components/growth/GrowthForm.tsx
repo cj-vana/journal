@@ -36,6 +36,8 @@ export function GrowthForm({ onSubmit, onCancel }: Props) {
         headCm: headCm ? parseFloat(headCm) : undefined,
         notes: notes.trim() || undefined,
       })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -58,10 +60,11 @@ export function GrowthForm({ onSubmit, onCancel }: Props) {
 
       {/* Date */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-warm-600 mb-1">
+        <label htmlFor="growth-date" className="block text-sm font-medium text-warm-600 mb-1">
           Date *
         </label>
         <input
+          id="growth-date"
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -73,10 +76,11 @@ export function GrowthForm({ onSubmit, onCancel }: Props) {
       {/* Measurements grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-warm-600 mb-1">
+          <label htmlFor="growth-height" className="block text-sm font-medium text-warm-600 mb-1">
             Height (cm)
           </label>
           <input
+            id="growth-height"
             type="number"
             value={heightCm}
             onChange={(e) => setHeightCm(e.target.value)}
@@ -88,10 +92,11 @@ export function GrowthForm({ onSubmit, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-warm-600 mb-1">
+          <label htmlFor="growth-weight" className="block text-sm font-medium text-warm-600 mb-1">
             Weight (kg)
           </label>
           <input
+            id="growth-weight"
             type="number"
             value={weightKg}
             onChange={(e) => setWeightKg(e.target.value)}
@@ -103,10 +108,11 @@ export function GrowthForm({ onSubmit, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-warm-600 mb-1">
+          <label htmlFor="growth-head" className="block text-sm font-medium text-warm-600 mb-1">
             Head (cm)
           </label>
           <input
+            id="growth-head"
             type="number"
             value={headCm}
             onChange={(e) => setHeadCm(e.target.value)}
@@ -121,10 +127,11 @@ export function GrowthForm({ onSubmit, onCancel }: Props) {
 
       {/* Notes */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-warm-600 mb-1">
+        <label htmlFor="growth-notes" className="block text-sm font-medium text-warm-600 mb-1">
           Notes
         </label>
         <textarea
+          id="growth-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Any observations..."

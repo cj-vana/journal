@@ -95,14 +95,16 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
       />
 
       <div>
-        <label className="block text-sm font-medium text-warm-800 mb-2">
+        <span className="block text-sm font-medium text-warm-800 mb-2">
           Color Theme
-        </label>
-        <div className="flex gap-3">
+        </span>
+        <div role="radiogroup" aria-label="Color Theme" className="flex gap-3">
           {genderOptions.map((option) => (
             <button
               key={option.value}
               type="button"
+              role="radio"
+              aria-checked={gender === option.value}
               onClick={() => setGender(option.value)}
               className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
                 gender === option.value
@@ -110,7 +112,7 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                   : 'border-warm-200 hover:border-warm-400'
               }`}
             >
-              <div className="flex gap-1">
+              <div className="flex gap-1" aria-hidden="true">
                 {option.colors.map((color, i) => (
                   <div
                     key={i}
@@ -129,6 +131,7 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
 
       {message && (
         <p
+          role={message.type === 'success' ? 'status' : 'alert'}
           className={`text-sm rounded-lg p-3 ${
             message.type === 'success'
               ? 'bg-green-50 text-green-700'

@@ -27,6 +27,7 @@ export default function GuestbookManager() {
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [regeneratedId, setRegeneratedId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({ type: 'birthday', title: '', honoreeName: '', eventDate: '', welcomeMessage: '' })
@@ -55,6 +56,10 @@ export default function GuestbookManager() {
       if (!res.ok) throw new Error('update')
       const updated = await res.json()
       setEvents((prev) => prev.map((e) => (e.id === id ? updated : e)))
+      if (body.regenerateCode) {
+        setRegeneratedId(id)
+        setTimeout(() => setRegeneratedId((c) => (c === id ? null : c)), 2000)
+      }
     } catch {
       setError('Failed to update guestbook')
     } finally {
@@ -161,26 +166,28 @@ export default function GuestbookManager() {
                 </div>
               </div>
 
-              {ev.enabled && (
-                <div className="flex items-center gap-2 mt-3">
-                  <input
-                    readOnly
-                    value={shareUrl(ev.code)}
-                    aria-label="Shareable guestbook link"
-                    onClick={(e) => (e.target as HTMLInputElement).select()}
-                    className="flex-1 bg-warm-50 border border-warm-200 rounded-lg px-3 py-1.5 text-xs text-warm-700 font-mono"
-                  />
-                  <Button variant="secondary" size="sm" onClick={() => handleCopy(ev.id, ev.code)} title="Copy link" aria-label="Copy link">
-                    {copiedId === ev.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => { if (confirm('Generate a new link? The old link will stop working.')) patch(ev.id, { regenerateCode: true }) }} disabled={busyId === ev.id} title="Regenerate link" aria-label="Regenerate link">
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(ev.id)} disabled={busyId === ev.id} title="Delete guestbook" aria-label="Delete guestbook" className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center gap-2 mt-3">
+                {ev.enabled && (
+                  <>
+                    <input
+                      readOnly
+                      value={shareUrl(ev.code)}
+                      aria-label="Shareable guestbook link"
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
+                      className="flex-1 bg-warm-50 border border-warm-200 rounded-lg px-3 py-1.5 text-xs text-warm-700 font-mono"
+                    />
+                    <Button variant="secondary" size="sm" onClick={() => handleCopy(ev.id, ev.code)} title="Copy link" aria-label="Copy link">
+                      {copiedId === ev.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { if (confirm('Generate a new link? The old link will stop working.')) patch(ev.id, { regenerateCode: true }) }} disabled={busyId === ev.id} title="Regenerate link" aria-label="Regenerate link">
+                      {regeneratedId === ev.id ? <Check className="w-4 h-4 text-green-600" /> : <RefreshCw className="w-4 h-4" />}
+                    </Button>
+                  </>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(ev.id)} disabled={busyId === ev.id} title="Delete guestbook" aria-label="Delete guestbook" className="ml-auto text-red-500 hover:text-red-700 hover:bg-red-50">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </li>
           ))}
         </ul>

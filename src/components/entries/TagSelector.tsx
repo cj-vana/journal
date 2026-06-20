@@ -12,15 +12,30 @@ interface TagSelectorProps {
 export default function TagSelector({ selectedTagIds, onChange }: TagSelectorProps) {
   const [tags, setTags] = useState<Tag[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    let active = true
     fetch('/api/tags')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to load tags')
+        return r.json()
+      })
       .then((data) => {
+        if (!active) return
         if (Array.isArray(data)) setTags(data)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (active) setLoadError(true)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
   }, [])
 
   useEffect(() => {
@@ -89,7 +104,13 @@ export default function TagSelector({ selectedTagIds, onChange }: TagSelectorPro
         <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-warm-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
           {availableTags.length === 0 ? (
             <div className="px-3 py-2 text-sm text-warm-600">
-              {tags.length === 0 ? 'No tags available' : 'All tags selected'}
+              {loading
+                ? 'Loading tags...'
+                : loadError
+                ? "Couldn't load tags"
+                : tags.length === 0
+                ? 'No tags available'
+                : 'All tags selected'}
             </div>
           ) : (
             availableTags.map((tag) => (

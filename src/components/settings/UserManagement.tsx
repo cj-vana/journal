@@ -40,6 +40,8 @@ export default function UserManagement({ currentUserId }: { currentUserId: strin
   const [expiresIn, setExpiresIn] = useState('')
   const [generating, setGenerating] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [inviteError, setInviteError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -59,30 +61,47 @@ export default function UserManagement({ currentUserId }: { currentUserId: strin
   }, [fetchData])
 
   async function handleRoleChange(user: User) {
+    setActionError(null)
     const newRole = user.role === 'admin' ? 'member' : 'admin'
-    const res = await fetch(`/api/users/${user.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: newRole }),
-    })
-    if (res.ok) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u))
-      )
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      })
+      if (res.ok) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u))
+        )
+        setConfirmAction(null)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setActionError(data.error || 'Action failed.')
+      }
+    } catch {
+      setActionError('Network error. Please try again.')
     }
-    setConfirmAction(null)
   }
 
   async function handleDeleteUser(user: User) {
-    const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setUsers((prev) => prev.filter((u) => u.id !== user.id))
+    setActionError(null)
+    try {
+      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setUsers((prev) => prev.filter((u) => u.id !== user.id))
+        setConfirmAction(null)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setActionError(data.error || 'Action failed.')
+      }
+    } catch {
+      setActionError('Network error. Please try again.')
     }
-    setConfirmAction(null)
   }
 
   async function handleGenerateInvite() {
     setGenerating(true)
+    setInviteError(null)
     try {
       const body: Record<string, unknown> = {}
       if (maxUses) body.maxUses = parseInt(maxUses) || 1
@@ -103,16 +122,29 @@ export default function UserManagement({ currentUserId }: { currentUserId: strin
       if (res.ok) {
         const invite = await res.json()
         setInvites((prev) => [invite, ...prev])
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setInviteError(data.error || 'Failed to generate invite code.')
       }
+    } catch {
+      setInviteError('Network error. Please try again.')
     } finally {
       setGenerating(false)
     }
   }
 
   async function handleDeleteInvite(id: string) {
-    const res = await fetch(`/api/invite/${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setInvites((prev) => prev.filter((i) => i.id !== id))
+    setInviteError(null)
+    try {
+      const res = await fetch(`/api/invite/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setInvites((prev) => prev.filter((i) => i.id !== id))
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setInviteError(data.error || 'Failed to delete invite code.')
+      }
+    } catch {
+      setInviteError('Network error. Please try again.')
     }
   }
 
@@ -274,6 +306,15 @@ export default function UserManagement({ currentUserId }: { currentUserId: strin
             </Button>
           </div>
 
+          {inviteError && (
+            <div
+              role="alert"
+              className="bg-red-50 text-red-600 text-sm rounded-lg p-3 mb-4"
+            >
+              {inviteError}
+            </div>
+          )}
+
           {invites.length === 0 ? (
             <p className="text-sm text-warm-500 py-4">
               No invite codes yet. Generate one to invite someone.
@@ -346,7 +387,10 @@ export default function UserManagement({ currentUserId }: { currentUserId: strin
       {/* Confirmation Modal */}
       <Modal
         isOpen={!!confirmAction}
-        onClose={() => setConfirmAction(null)}
+        onClose={() => {
+          setConfirmAction(null)
+          setActionError(null)
+        }}
         title={
           confirmAction?.type === 'delete' ? 'Remove User' : 'Change Role'
         }
@@ -358,11 +402,22 @@ export default function UserManagement({ currentUserId }: { currentUserId: strin
               <strong>{confirmAction.user.name}</strong>? This action cannot be
               undone.
             </p>
+            {actionError && (
+              <div
+                role="alert"
+                className="bg-red-50 text-red-600 text-sm rounded-lg p-3 mb-4"
+              >
+                {actionError}
+              </div>
+            )}
             <div className="flex gap-3 justify-end">
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setConfirmAction(null)}
+                onClick={() => {
+                  setConfirmAction(null)
+                  setActionError(null)
+                }}
               >
                 Cancel
               </Button>
@@ -382,11 +437,22 @@ export default function UserManagement({ currentUserId }: { currentUserId: strin
                 ? `Demote ${confirmAction.user.name} from admin to member?`
                 : `Promote ${confirmAction.user.name} from member to admin?`}
             </p>
+            {actionError && (
+              <div
+                role="alert"
+                className="bg-red-50 text-red-600 text-sm rounded-lg p-3 mb-4"
+              >
+                {actionError}
+              </div>
+            )}
             <div className="flex gap-3 justify-end">
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setConfirmAction(null)}
+                onClick={() => {
+                  setConfirmAction(null)
+                  setActionError(null)
+                }}
               >
                 Cancel
               </Button>

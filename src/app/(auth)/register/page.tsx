@@ -77,9 +77,9 @@ function RegisterForm() {
       <p className="text-warm-600 text-center mb-6">Enter your invite code to get started</p>
 
       {!codeValidated ? (
-        <div className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); validateCode() }} className="space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>
+            <div className="bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm" role="alert">{error}</div>
           )}
           <div>
             <label htmlFor="code" className="block text-sm font-medium text-warm-600 mb-1">
@@ -96,17 +96,17 @@ function RegisterForm() {
             />
           </div>
           <button
-            onClick={validateCode}
+            type="submit"
             disabled={loading || !inviteCode}
             className="w-full bg-accent-400 hover:bg-accent-600 text-white rounded-xl px-4 py-2.5 font-medium transition-colors disabled:opacity-50"
           >
             {loading ? 'Validating...' : 'Continue'}
           </button>
-        </div>
+        </form>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>
+            <div className="bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm" role="alert">{error}</div>
           )}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-warm-600 mb-1">Name</label>

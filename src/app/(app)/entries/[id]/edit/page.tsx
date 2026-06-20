@@ -197,8 +197,9 @@ export default function EditEntryPage() {
 
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-warm-600 mb-1">Entry Date</label>
+            <label htmlFor="entry-date" className="block text-sm font-medium text-warm-600 mb-1">Entry Date</label>
             <input
+              id="entry-date"
               type="date"
               value={entryDate}
               onChange={(e) => setEntryDate(e.target.value)}

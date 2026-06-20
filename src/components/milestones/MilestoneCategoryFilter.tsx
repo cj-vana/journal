@@ -37,46 +37,71 @@ export function MilestoneCategoryFilter({ categories, milestones: initialMilesto
   const [milestones, setMilestones] = useState(initialMilestones)
   const [showForm, setShowForm] = useState(false)
   const [editingMilestone, setEditingMilestone] = useState<MilestoneData | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const filtered = activeCategory
     ? milestones.filter((m) => m.category === activeCategory)
     : milestones
 
   async function handleCreate(data: Record<string, unknown>) {
-    const res = await fetch('/api/milestones', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (res.ok) {
+    setFormError(null)
+    try {
+      const res = await fetch('/api/milestones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => null)
+        setFormError(d?.error ?? 'Could not save milestone. Please try again.')
+        return
+      }
       const created = await res.json()
       setMilestones((prev) => [created, ...prev])
       setShowForm(false)
+    } catch {
+      setFormError('Network error, please try again.')
     }
   }
 
   async function handleUpdate(data: Record<string, unknown>) {
     if (!editingMilestone) return
-    const res = await fetch(`/api/milestones/${editingMilestone.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (res.ok) {
+    setFormError(null)
+    try {
+      const res = await fetch(`/api/milestones/${editingMilestone.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => null)
+        setFormError(d?.error ?? 'Could not save milestone. Please try again.')
+        return
+      }
       const updated = await res.json()
       setMilestones((prev) => prev.map((m) => (m.id === updated.id ? updated : m)))
       setEditingMilestone(null)
+    } catch {
+      setFormError('Network error, please try again.')
     }
   }
 
   async function handleDelete(id: string) {
-    const res = await fetch(`/api/milestones/${id}`, { method: 'DELETE' })
-    if (res.ok) {
+    if (!window.confirm('Delete this milestone? This cannot be undone.')) return
+    try {
+      const res = await fetch(`/api/milestones/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        window.alert('Could not delete milestone. Please try again.')
+        return
+      }
       setMilestones((prev) => prev.filter((m) => m.id !== id))
+    } catch {
+      window.alert('Could not delete milestone. Please try again.')
     }
   }
 
   function handleEdit(milestone: MilestoneData) {
+    setFormError(null)
     setEditingMilestone(milestone)
     setShowForm(false)
   }
@@ -87,6 +112,7 @@ export function MilestoneCategoryFilter({ categories, milestones: initialMilesto
       <div className="flex flex-wrap gap-2 mb-6">
         <button
           onClick={() => setActiveCategory(null)}
+          aria-pressed={activeCategory === null}
           className={cn(
             'px-4 py-2 rounded-full text-sm font-medium transition-colors',
             activeCategory === null
@@ -100,6 +126,7 @@ export function MilestoneCategoryFilter({ categories, milestones: initialMilesto
           <button
             key={cat.value}
             onClick={() => setActiveCategory(activeCategory === cat.value ? null : cat.value)}
+            aria-pressed={activeCategory === cat.value}
             className={cn(
               'px-4 py-2 rounded-full text-sm font-medium transition-colors',
               activeCategory === cat.value
@@ -115,7 +142,7 @@ export function MilestoneCategoryFilter({ categories, milestones: initialMilesto
         ))}
         <div className="flex-1" />
         <button
-          onClick={() => { setShowForm(true); setEditingMilestone(null) }}
+          onClick={() => { setFormError(null); setShowForm(true); setEditingMilestone(null) }}
           className="px-4 py-2 rounded-full text-sm font-medium bg-accent-400 text-white hover:bg-accent-600 transition-colors"
         >
           + Add Milestone
@@ -134,7 +161,8 @@ export function MilestoneCategoryFilter({ categories, milestones: initialMilesto
               icon: editingMilestone.icon || '',
             } : undefined}
             onSubmit={editingMilestone ? handleUpdate : handleCreate}
-            onCancel={() => { setShowForm(false); setEditingMilestone(null) }}
+            onCancel={() => { setShowForm(false); setEditingMilestone(null); setFormError(null) }}
+            error={formError}
           />
         </div>
       )}
@@ -149,7 +177,7 @@ export function MilestoneCategoryFilter({ categories, milestones: initialMilesto
           </p>
           {!showForm && (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => { setFormError(null); setShowForm(true) }}
               className="px-6 py-3 rounded-full bg-accent-400 text-white hover:bg-accent-600 transition-colors font-medium"
             >
               Record First Milestone

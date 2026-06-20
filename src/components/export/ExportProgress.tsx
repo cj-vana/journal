@@ -77,7 +77,7 @@ export default function ExportProgress({
             </Button>
           </div>
           {error && (
-            <p className="mt-3 text-sm text-red-600 bg-red-50 rounded-lg p-3">
+            <p className="mt-3 text-sm text-red-600 bg-red-50 rounded-lg p-3" role="alert">
               {error}
             </p>
           )}

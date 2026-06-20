@@ -18,6 +18,7 @@ export default function SetupPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [autoLoginFailed, setAutoLoginFailed] = useState(false)
 
   // Account fields
   const [name, setName] = useState('')
@@ -75,6 +76,7 @@ export default function SetupPage() {
       })
 
       if (signInResult?.error) {
+        setAutoLoginFailed(true)
         setStep('done')
       } else {
         setStep('done')
@@ -322,16 +324,22 @@ export default function SetupPage() {
             You&apos;re All Set!
           </h1>
           <p className="text-warm-600 mb-8">
-            Your journal is ready. Start capturing memories.
+            {autoLoginFailed
+              ? 'Your journal is ready. Please sign in to continue.'
+              : 'Your journal is ready. Start capturing memories.'}
           </p>
           <button
             onClick={() => {
-              router.push('/dashboard')
-              router.refresh()
+              if (autoLoginFailed) {
+                router.push('/login')
+              } else {
+                router.push('/dashboard')
+                router.refresh()
+              }
             }}
             className="w-full bg-accent-400 hover:bg-accent-600 text-white rounded-xl px-4 py-2.5 font-medium transition-colors"
           >
-            Go to Dashboard
+            {autoLoginFailed ? 'Go to Login' : 'Go to Dashboard'}
           </button>
         </div>
       )}

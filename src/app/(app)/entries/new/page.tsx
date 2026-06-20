@@ -37,6 +37,7 @@ export default function NewEntryPage() {
   const [lastSavedDraft, setLastSavedDraft] = useState('')
   const [draftId, setDraftId] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
   const debouncedContent = useDebounce(content, 3000)
 
@@ -82,6 +83,7 @@ export default function NewEntryPage() {
     if (!debouncedContent || debouncedContent === lastSavedDraftRef.current || !debouncedContent.includes('"content"')) return
 
     const autoSave = async () => {
+      setAutoSaveStatus('saving')
       try {
         const draftPayload = {
           title: titleRef.current || undefined,
@@ -93,25 +95,33 @@ export default function NewEntryPage() {
         }
 
         if (draftIdRef.current) {
-          await fetch(`/api/entries/${draftIdRef.current}`, {
+          const res = await fetch(`/api/entries/${draftIdRef.current}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(draftPayload),
           })
+          if (!res.ok) {
+            setAutoSaveStatus('error')
+            return
+          }
         } else {
           const res = await fetch('/api/entries', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(draftPayload),
           })
-          if (res.ok) {
-            const data = await res.json()
-            setDraftId(data.id)
+          if (!res.ok) {
+            setAutoSaveStatus('error')
+            return
           }
+          const data = await res.json()
+          setDraftId(data.id)
         }
         setLastSavedDraft(debouncedContent)
+        setAutoSaveStatus('saved')
       } catch {
-        // Silent fail for auto-save
+        // Swallow the error so nothing crashes, but surface it in the UI.
+        setAutoSaveStatus('error')
       }
     }
 
@@ -203,8 +213,9 @@ export default function NewEntryPage() {
 
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-warm-600 mb-1">Entry Date</label>
+            <label htmlFor="entry-date" className="block text-sm font-medium text-warm-600 mb-1">Entry Date</label>
             <input
+              id="entry-date"
               type="date"
               value={entryDate}
               onChange={(e) => setEntryDate(e.target.value)}
@@ -217,6 +228,11 @@ export default function NewEntryPage() {
         </div>
 
         <div>
+          <div className="flex justify-end mb-1 h-4">
+            {autoSaveStatus === 'saving' && <span className="text-xs text-warm-500">Saving draft…</span>}
+            {autoSaveStatus === 'saved' && <span className="text-xs text-warm-500">Draft saved</span>}
+            {autoSaveStatus === 'error' && <span className="text-xs text-red-600">Couldn’t save draft — your changes may not be preserved.</span>}
+          </div>
           <EditorToolbar
             editor={editor}
             onImageUpload={handleImageUpload}
