@@ -2,7 +2,7 @@ import { requireAdmin } from '@/lib/auth-utils'
 import { prisma } from '@/lib/prisma'
 import { getAppSettings } from '@/lib/settings'
 import SettingsForm from '@/components/settings/SettingsForm'
-import ShowerSettings from '@/components/settings/ShowerSettings'
+import GuestbookManager from '@/components/settings/GuestbookManager'
 import Link from 'next/link'
 import { Users } from 'lucide-react'
 
@@ -40,7 +40,7 @@ export default async function SettingsPage() {
         <SettingsForm initialSettings={initialSettings} />
       </div>
 
-      <ShowerSettings />
+      <GuestbookManager />
 
       <Link
         href="/settings/users"
