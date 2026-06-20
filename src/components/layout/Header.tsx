@@ -34,7 +34,7 @@ export default function Header({ title, onMenuToggle }: HeaderProps) {
   const pageTitle = title || getPageTitle(pathname)
 
   return (
-    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-warm-200">
+    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-warm-200 pt-[env(safe-area-inset-top,0px)]">
       <div className="flex items-center justify-between px-4 py-3 md:px-6">
         <div className="flex items-center gap-3">
           {/* Mobile menu button */}

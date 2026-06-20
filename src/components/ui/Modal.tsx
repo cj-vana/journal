@@ -91,7 +91,7 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
       <div
         ref={modalRef}
         className={cn(
-          'relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6 z-10 animate-in zoom-in-95',
+          'relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6 z-10 max-h-[85dvh] overflow-y-auto animate-in zoom-in-95',
           className
         )}
         onClick={(e) => e.stopPropagation()}

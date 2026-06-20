@@ -17,7 +17,7 @@ export default function MobileNav() {
   const pathname = usePathname()
 
   return (
-    <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-warm-200 pb-[env(safe-area-inset-bottom)]">
+    <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-warm-200 pb-[env(safe-area-inset-bottom,0px)]">
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
           const isActive = item.href === '/entries/new'

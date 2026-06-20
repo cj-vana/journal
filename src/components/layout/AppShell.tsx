@@ -94,7 +94,7 @@ export default function AppShell({ appTitle, childName, user, children }: AppShe
             className="fixed inset-0 bg-black/50"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div ref={drawerRef} className="fixed left-0 top-0 h-full w-64 bg-warm-50 border-r border-warm-200 z-50 overflow-y-auto">
+          <div ref={drawerRef} className="fixed left-0 top-0 h-dvh w-64 bg-warm-50 border-r border-warm-200 z-50 overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
             <div className="flex items-center justify-between p-4 border-b border-warm-200">
               <h1 className="font-accent text-2xl text-warm-800">{appTitle}</h1>
               <button
@@ -115,7 +115,7 @@ export default function AppShell({ appTitle, childName, user, children }: AppShe
       {/* Main content */}
       <div className="md:pl-64">
         <Header onMenuToggle={() => setMobileMenuOpen(true)} />
-        <main id="main-content" tabIndex={-1} className="min-h-screen pb-20 md:pb-0">
+        <main id="main-content" tabIndex={-1} className="min-h-screen min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           <div className="max-w-5xl mx-auto px-4 py-8">
             {children}
           </div>

@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const gender = (settings?.gender as 'girl' | 'boy' | 'neutral') || 'neutral'
 
   return (
-    <div className="min-h-screen bg-cream-50" data-theme={gender}>
+    <div className="min-h-screen min-h-dvh bg-cream-50" data-theme={gender}>
       <DebugBanner enabled={process.env.ENABLE_DEBUG_PROFILE === 'true' && process.env.NODE_ENV !== 'production'} />
       <AppShell
         appTitle={settings?.appTitle || 'Our Journal'}
