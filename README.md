@@ -153,7 +153,6 @@ prisma/
 ├── migrations/           # SQLite migrations
 ├── seed.ts               # Development seed data
 └── seed-production.js    # Production seed (tags, prompts — no test users)
-chaos-monkey/             # E2E testing suite (Playwright)
 ```
 
 ### Key Technologies
@@ -251,34 +250,6 @@ The PDF export generates a scrapbook-style book with:
 
 PDF generation uses Puppeteer with headless Chromium. Fonts are embedded locally (no external CDN dependencies), so it works in air-gapped environments.
 
-## Testing
-
-### Chaos Monkey (E2E Tests)
-
-The `chaos-monkey/` directory contains Playwright-based end-to-end tests:
-
-```bash
-cd chaos-monkey
-npm install
-npx playwright install chromium
-
-# Run all tests against a running instance
-TARGET_URL=http://localhost:3000 npx playwright test
-```
-
-Or run via Docker Compose with the `chaos` profile:
-
-```bash
-docker compose -f docker-compose.dev.yml --profile chaos up chaos-monkey
-```
-
-Test coverage includes:
-- Entry CRUD operations
-- Settings changes and UI updates
-- Setup wizard behavior
-- Authentication flows
-- Milestone and growth record management
-
 ## Security
 
 - **Authentication** — bcrypt-hashed passwords, session-based auth via NextAuth.js
@@ -298,7 +269,7 @@ Pre-built images are published to `ghcr.io/cj-vana/journal` for `linux/amd64` an
 | File | Purpose |
 |---|---|
 | `docker-compose.yml` | **Production** — pulls pre-built image from GHCR |
-| `docker-compose.dev.yml` | **Development** — builds from source, includes chaos-monkey |
+| `docker-compose.dev.yml` | **Development** — builds from source |
 
 The Dockerfile uses a multi-stage build:
 1. **deps** — Install Node.js dependencies

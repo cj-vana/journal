@@ -4,4 +4,3 @@ node_modules
 .env
 data/
 *.md
-chaos-monkey/

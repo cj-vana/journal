@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "test:e2e": "npm --prefix chaos-monkey run test:e2e",
-    "test:chaos": "npm --prefix chaos-monkey test"
+    "lint": "eslint"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

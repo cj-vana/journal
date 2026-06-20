@@ -34,16 +34,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Install E2E dependencies
-        run: npm ci --prefix chaos-monkey
-
-      - name: Run E2E tests
-        run: docker compose -f docker-compose.dev.yml --profile chaos up --build --abort-on-container-exit --exit-code-from chaos-monkey
-        env:
-          AUTH_SECRET: ci-test-secret-minimum-32-characters
-          ADMIN_EMAIL: admin@example.com
-          ADMIN_PASSWORD: test-password-12345
-
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest

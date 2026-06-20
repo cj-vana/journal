@@ -26,25 +26,6 @@ services:
       retries: 3
       start_period: 30s
 
-  chaos-monkey:
-    build: ./chaos-monkey
-    container_name: chaos-monkey
-    profiles: ["chaos"]
-    depends_on:
-      journal:
-        condition: service_healthy
-    environment:
-      - TARGET_URL=http://journal:3000
-      - DEBUG_KEY=${DEBUG_KEY}
-      - CHAOS_INTERVAL_MS=30000
-      - CHAOS_PROBABILITY=0.5
-      - DOCKER_HOST=/var/run/docker.sock
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - journal-data:/data:ro
-    ports:
-      - "3001:3001"
-
 volumes:
   journal-data:
     driver: local

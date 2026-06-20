@@ -13,7 +13,6 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     // Not part of the Next.js app:
-    "chaos-monkey/**",
     "prisma/seed-production.js",
   ]),
 ]);
