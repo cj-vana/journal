@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { apiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
+  // Throttle the unauthenticated invite-validation oracle (defense in depth;
+  // codes are high-entropy nanoid(12)). Best-effort per-IP limit.
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+  if (!checkRateLimit(`invite:${ip}`, 30, 60 * 60 * 1000)) {
+    return NextResponse.json({ valid: false, error: 'Too many requests' }, { status: 429 })
+  }
+
   const { code } = await params
 
   const invite = await prisma.inviteCode.findUnique({ where: { code } })

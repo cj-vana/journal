@@ -12,6 +12,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
+        // The reserved debug domain is only reachable via x-debug-key impersonation
+        // (dev only). Never allow it to log in via credentials, so a debug-seeded
+        // account can never be used as a password backdoor in any environment.
+        if (String(credentials.email).toLowerCase().endsWith('@debug.local')) return null
+
         const { prisma } = await import('./prisma')
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },

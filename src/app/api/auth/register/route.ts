@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const schema = z.object({
   name: z.string().min(1).max(100),
@@ -11,6 +12,13 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  // Throttle the unauthenticated registration path (bcrypt cost-12 + email
+  // enumeration). Best-effort per-IP limit from x-forwarded-for.
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+  if (!checkRateLimit(`register:${ip}`, 10, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
+
   const body = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success) {

@@ -33,7 +33,11 @@ async function main() {
     const debugEmail = 'chaos-test@debug.local'
     const existing = await prisma.user.findUnique({ where: { email: debugEmail } })
     if (!existing) {
-      const passwordHash = await bcrypt.hash('debug123', 12)
+      // Never seed a password-loginable account. The chaos-test debug user is reached
+      // only via the x-debug-key impersonation path (src/lib/api-auth.ts), which never
+      // checks the password, so we hash a random throwaway secret that is discarded.
+      const { randomBytes } = await import('crypto')
+      const passwordHash = await bcrypt.hash(randomBytes(32).toString('hex'), 12)
       await prisma.user.create({
         data: {
           email: debugEmail,

@@ -15,8 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const contentLength = parseInt(req.headers.get('content-length') || '0')
-    if (contentLength > MAX_UPLOAD_SIZE + 1024) {
+    // Browsers always set Content-Length for multipart uploads. A missing or
+    // non-numeric value must be rejected, otherwise the guard is skipped and the
+    // entire body is buffered into memory before the post-parse size check.
+    const clRaw = req.headers.get('content-length')
+    const contentLength = clRaw === null ? NaN : Number(clRaw)
+    if (!Number.isFinite(contentLength) || contentLength > MAX_UPLOAD_SIZE + 1024) {
       return NextResponse.json({ error: 'File too large' }, { status: 413 })
     }
 

@@ -20,7 +20,16 @@ export async function POST(req: NextRequest) {
     const forwardedFor = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     const clientIp = forwardedFor || req.headers.get('x-real-ip') || 'unknown'
 
+    // Per-IP best-effort limit. clientIp comes from x-forwarded-for, which is
+    // spoofable when no header-sanitizing proxy fronts the app, so it is backed
+    // by an IP-independent global cap per guestbook below.
     if (!checkRateLimit(`event:${code}:${clientIp}`, 10, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: 'Too many submissions' }, { status: 429 })
+    }
+    // Global cap per guestbook code, independent of (spoofable) client IP, so
+    // header rotation cannot mint unlimited submissions. Sized well above
+    // realistic legitimate guest traffic.
+    if (!checkRateLimit(`event-global:${code}`, 60, 60 * 60 * 1000)) {
       return NextResponse.json({ error: 'Too many submissions' }, { status: 429 })
     }
 
