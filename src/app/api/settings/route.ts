@@ -11,15 +11,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    let settings = await prisma.appSettings.findFirst({
+    // Atomic upsert avoids a P2002 race when two concurrent first-loads both
+    // try to create the singleton on a fresh database.
+    const settings = await prisma.appSettings.upsert({
       where: { id: 'singleton' },
+      update: {},
+      create: { id: 'singleton' },
     })
-
-    if (!settings) {
-      settings = await prisma.appSettings.create({
-        data: { id: 'singleton' },
-      })
-    }
 
     return NextResponse.json(settings)
   } catch (error) {
@@ -32,8 +30,8 @@ export async function GET() {
 }
 
 const updateSettingsSchema = z.object({
-  childName: z.string().min(1).optional(),
-  appTitle: z.string().min(1).optional(),
+  childName: z.string().trim().min(1).max(100).optional(),
+  appTitle: z.string().trim().min(1).max(120).optional(),
   childBirthDate: z.string().nullable().optional(),
   gender: z.enum(['girl', 'boy', 'neutral']).optional(),
 })
