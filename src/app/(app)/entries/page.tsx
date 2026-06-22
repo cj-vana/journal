@@ -51,20 +51,9 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
     })
   }
 
-  // Members should not see other users' drafts
+  // Non-admins only ever see their own entries (published or draft)
   if (session.user.role !== 'admin') {
-    // If user filtered by drafts=true, we need to scope to their own drafts only.
-    // Otherwise the visibility filter ensures they see published + their own drafts.
-    if (drafts === 'true') {
-      where.authorId = session.user.id
-    } else {
-      andConditions.push({
-        OR: [
-          { isDraft: false },
-          { authorId: session.user.id },
-        ],
-      })
-    }
+    where.authorId = session.user.id
   }
 
   if (andConditions.length > 0) {

@@ -14,10 +14,10 @@ export default async function DashboardPage() {
   const isAdmin = session.user?.role === 'admin'
   const userId = session.user?.id
 
-  // Non-admin users see only published entries + their own drafts
+  // Admins see all entries; non-admins see only their own
   const entryVisibility = isAdmin
     ? { isDraft: false }
-    : { OR: [{ isDraft: false }, { authorId: userId, isDraft: true }] }
+    : { authorId: userId }
 
   const [settings, totalEntries, monthlyEntries, recentEntries, latestMilestone, prompts] =
     await Promise.all([
